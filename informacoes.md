@@ -74,3 +74,10 @@ shara-fit/
 - [x] Domínio `matrix.vlfp.com.br` roteado via Nginx Proxy Manager com certificado SSL ativo
 - [x] Rota de autenticação da professora Sara testada com sucesso via HTTPS
 - [x] Conexão dinâmica e interface no painel da professora para troca de domínio a qualquer momento
+
+## 5. Diretriz Obrigatória de Versionamento e Deploy Contínuo (CI/CD)
+
+- **Commit e Push Imediato no Frontend**:
+  - Qualquer alteração realizada nos arquivos do frontend (`src/`, `public/`, `index.html`, estilos, componentes, documentação, etc.) deve ser **imediatamente commitada e enviada via `git push origin main` para o repositório no GitHub** ([https://github.com/vlfpimenta/shara-fit](https://github.com/vlfpimenta/shara-fit)).
+  - Essa diretriz assegura o disparo automático do pipeline de deploy contínuo na Vercel a cada intervenção.
+
