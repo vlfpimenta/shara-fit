@@ -99,6 +99,58 @@ fastify.post('/api/auth/login', async (requisicao, resposta) => {
   } finally {
     cliente.release();
   }
+// 2.1 Configuração de Credenciais da Professora (Primeiro Acesso ou Alteração)
+fastify.post('/api/auth/professor/configurar-credenciais', async (requisicao, resposta) => {
+  const { nome, email, senha } = requisicao.body || {};
+  if (!email || !senha) {
+    return resposta.status(400).send({ sucesso: false, mensagem: 'E-mail e senha são obrigatórios.' });
+  }
+
+  const emailLimpo = email.trim().toLowerCase();
+  const nomeFinal = (nome && nome.trim()) || 'Sara';
+  const cliente = await pool.connect();
+
+  try {
+    const hashSenha = await bcrypt.hash(senha, 10);
+
+    const buscaProf = await cliente.query("SELECT id FROM usuarios WHERE papel = 'professor' LIMIT 1");
+
+    let usuarioId;
+    if (buscaProf.rows.length > 0) {
+      usuarioId = buscaProf.rows[0].id;
+      await cliente.query(
+        "UPDATE usuarios SET nome = $1, email = $2, senha_hash = $3 WHERE id = $4",
+        [nomeFinal, emailLimpo, hashSenha, usuarioId]
+      );
+    } else {
+      usuarioId = 'prof-sara-1';
+      await cliente.query(
+        "INSERT INTO usuarios (id, papel, nome, email, senha_hash, cref, status) VALUES ($1, 'professor', $2, $3, $4, '012345-G/SP', 'ativo')",
+        [usuarioId, nomeFinal, emailLimpo, hashSenha]
+      );
+    }
+
+    const token = fastify.jwt.sign({
+      id: usuarioId,
+      papel: 'professor',
+      nome: nomeFinal,
+      email: emailLimpo
+    }, { expiresIn: '30d' });
+
+    return {
+      sucesso: true,
+      mensagem: `Credenciais da professora ${nomeFinal} configuradas com sucesso!`,
+      token,
+      usuario: {
+        id: usuarioId,
+        papel: 'professor',
+        nome: nomeFinal,
+        email: emailLimpo
+      }
+    };
+  } finally {
+    cliente.release();
+  }
 });
 
 // 3. Cadastro de Novo Aluno com Anamnese (Público)

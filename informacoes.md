@@ -74,6 +74,7 @@ shara-fit/
 - [x] Domínio `matrix.vlfp.com.br` roteado via Nginx Proxy Manager com certificado SSL ativo
 - [x] Rota de autenticação da professora Sara testada com sucesso via HTTPS
 - [x] Conexão dinâmica e interface no painel da professora para troca de domínio a qualquer momento
+- [x] Fluxo de Primeiro Acesso da Professora implementado (cadastro direto de e-mail e senha pessoais com sincronização no PostgreSQL)
 
 ## 5. Diretriz Obrigatória de Versionamento e Deploy Contínuo (CI/CD)
 

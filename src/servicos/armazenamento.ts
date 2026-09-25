@@ -1,11 +1,12 @@
 import { ALUNOS_EXEMPLO, PROFESSORA_PADRAO } from '../dados/iniciais';
-import { DivisaoTreino, FichaDeTreino, RespostasAnamnese, UsuarioAluno, UsuarioSessao } from '../tipos';
+import { DivisaoTreino, FichaDeTreino, RespostasAnamnese, UsuarioAluno, UsuarioProfessor, UsuarioSessao } from '../tipos';
 
 const CHAVE_ALUNOS = 'shara_ef_alunos_v1';
 const CHAVE_SESSAO = 'shara_ef_sessao_v1';
 const CHAVE_SENHAS = 'shara_ef_credenciais_v1';
 const CHAVE_MODO_SIMULACAO = 'shara_ef_simulacao_aluno_id';
 const CHAVE_URL_API = 'shara_ef_url_api_v1';
+const CHAVE_PROFESSORA = 'shara_ef_professora_dados_v1';
 
 export class ServicoArmazenamento {
   // Obter URL configurada para a API backend (padrão: matrix.vlfp.com.br)
@@ -74,6 +75,63 @@ export class ServicoArmazenamento {
       };
       localStorage.setItem(CHAVE_SENHAS, JSON.stringify(senhasIniciais));
     }
+  }
+
+  // Obter dados cadastrais da professora (personalizado ou padrão)
+  static obterDadosProfessora(): UsuarioProfessor {
+    try {
+      const dados = localStorage.getItem(CHAVE_PROFESSORA);
+      return dados ? JSON.parse(dados) : PROFESSORA_PADRAO;
+    } catch {
+      return PROFESSORA_PADRAO;
+    }
+  }
+
+  // Configurar credenciais personalizadas da professora (Primeiro acesso ou alteração)
+  static async configurarCredenciaisProfessora(
+    nome: string,
+    email: string,
+    senhaPlana: string
+  ): Promise<{ sucesso: boolean; mensagem: string; usuario?: UsuarioProfessor }> {
+    this.inicializar();
+    const emailLimpo = email.trim().toLowerCase();
+    const nomeFinal = nome.trim() || 'Sara';
+
+    const professorAtualizado: UsuarioProfessor = {
+      id: 'prof-sara-1',
+      papel: 'professor',
+      nome: nomeFinal,
+      email: emailLimpo,
+      cref: '012345-G/SP'
+    };
+
+    // 1. Sincronizar na VPS
+    try {
+      const urlApi = this.obterUrlApi();
+      await fetch(`${urlApi}/api/auth/professor/configurar-credenciais`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome: nomeFinal, email: emailLimpo, senha: senhaPlana })
+      });
+    } catch {
+      // Fallback offline
+    }
+
+    // 2. Salvar credencial e perfil local
+    const senhasRaw = localStorage.getItem(CHAVE_SENHAS);
+    const senhas: Record<string, string> = senhasRaw ? JSON.parse(senhasRaw) : {};
+    senhas[emailLimpo] = senhaPlana;
+    localStorage.setItem(CHAVE_SENHAS, JSON.stringify(senhas));
+    localStorage.setItem(CHAVE_PROFESSORA, JSON.stringify(professorAtualizado));
+
+    this.definirSessao(professorAtualizado);
+    this.desativarModoSimulacao();
+
+    return {
+      sucesso: true,
+      mensagem: `Credenciais da professora ${nomeFinal} configuradas com sucesso!`,
+      usuario: professorAtualizado
+    };
   }
 
   // Obter todos os alunos cadastrados
@@ -291,13 +349,14 @@ export class ServicoArmazenamento {
     // 2. Fallback de autenticação local (para suporte PWA offline)
     const senhasRaw = localStorage.getItem(CHAVE_SENHAS);
     const senhas: Record<string, string> = senhasRaw ? JSON.parse(senhasRaw) : {};
+    const profAtual = this.obterDadosProfessora();
 
-    if (emailLimpo === PROFESSORA_PADRAO.email.toLowerCase()) {
-      const senhaCorreta = senhas[emailLimpo] || 'sara123';
+    if (emailLimpo === profAtual.email.toLowerCase() || emailLimpo === PROFESSORA_PADRAO.email.toLowerCase()) {
+      const senhaCorreta = senhas[emailLimpo] || senhas[profAtual.email.toLowerCase()] || senhas[PROFESSORA_PADRAO.email.toLowerCase()] || 'sara123';
       if (senha === senhaCorreta) {
-        this.definirSessao(PROFESSORA_PADRAO);
+        this.definirSessao(profAtual);
         this.desativarModoSimulacao();
-        return { sucesso: true, mensagem: 'Bem-vinda, Professora Sara!', usuario: PROFESSORA_PADRAO };
+        return { sucesso: true, mensagem: `Bem-vinda, Professora ${profAtual.nome}!`, usuario: profAtual };
       }
       return { sucesso: false, mensagem: 'Senha incorreta para a conta da Professora.' };
     }
