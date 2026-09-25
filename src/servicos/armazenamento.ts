@@ -70,11 +70,62 @@ export class ServicoArmazenamento {
     }
     if (!localStorage.getItem(CHAVE_SENHAS)) {
       const senhasIniciais: Record<string, string> = {
-        'sara@sharaef.com.br': 'sara123',
         'mariana@exemplo.com': '123456'
       };
       localStorage.setItem(CHAVE_SENHAS, JSON.stringify(senhasIniciais));
+    } else {
+      // Limpeza de segurança: remover credenciais padrão prévias
+      try {
+        const senhasRaw = localStorage.getItem(CHAVE_SENHAS);
+        if (senhasRaw) {
+          const senhas = JSON.parse(senhasRaw);
+          if (senhas['sara@sharaef.com.br'] === 'sara123') {
+            delete senhas['sara@sharaef.com.br'];
+            localStorage.setItem(CHAVE_SENHAS, JSON.stringify(senhas));
+          }
+        }
+      } catch {}
     }
+  }
+
+  // Verificar no banco (VPS) e localmente se há professor(a) cadastrado(a)
+  static async verificarStatusProfessora(): Promise<{ configurado: boolean; nome?: string; email?: string }> {
+    try {
+      const urlApi = this.obterUrlApi();
+      const controle = new AbortController();
+      const tempoLimite = setTimeout(() => controle.abort(), 4000);
+      const resposta = await fetch(`${urlApi}/api/auth/professor/status`, {
+        signal: controle.signal,
+        headers: { 'Accept': 'application/json' }
+      });
+      clearTimeout(tempoLimite);
+
+      if (resposta.ok) {
+        const dados = await resposta.json();
+        return {
+          configurado: Boolean(dados.configurado),
+          nome: dados.nome,
+          email: dados.email
+        };
+      }
+    } catch {
+      // Em caso de falha de conexão à VPS, consulta se há credencial local válida
+    }
+
+    const profSalva = localStorage.getItem(CHAVE_PROFESSORA);
+    const senhasRaw = localStorage.getItem(CHAVE_SENHAS);
+    const senhas: Record<string, string> = senhasRaw ? JSON.parse(senhasRaw) : {};
+
+    if (profSalva) {
+      try {
+        const p = JSON.parse(profSalva);
+        if (p.email && senhas[p.email.toLowerCase()]) {
+          return { configurado: true, nome: p.nome, email: p.email };
+        }
+      } catch {}
+    }
+
+    return { configurado: false };
   }
 
   // Obter dados cadastrais da professora (personalizado ou padrão)
@@ -351,8 +402,11 @@ export class ServicoArmazenamento {
     const senhas: Record<string, string> = senhasRaw ? JSON.parse(senhasRaw) : {};
     const profAtual = this.obterDadosProfessora();
 
-    if (emailLimpo === profAtual.email.toLowerCase() || emailLimpo === PROFESSORA_PADRAO.email.toLowerCase()) {
-      const senhaCorreta = senhas[emailLimpo] || senhas[profAtual.email.toLowerCase()] || senhas[PROFESSORA_PADRAO.email.toLowerCase()] || 'sara123';
+    if (emailLimpo === profAtual.email.toLowerCase()) {
+      const senhaCorreta = senhas[emailLimpo] || senhas[profAtual.email.toLowerCase()];
+      if (!senhaCorreta) {
+        return { sucesso: false, mensagem: 'Nenhuma credencial de professora configurada. Realize o cadastro inicial.' };
+      }
       if (senha === senhaCorreta) {
         this.definirSessao(profAtual);
         this.desativarModoSimulacao();

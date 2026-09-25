@@ -45,6 +45,32 @@
   margin: 0;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
+  scrollbar-width: thin;
+  scrollbar-color: #28325c #0c0f1d;
+}
+
+/* Barras de Rolagem Escuras (Dark Mode) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0c0f1d;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #28325c;
+  border-radius: 9999px;
+  border: 2px solid #0c0f1d;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #ff2e7e;
+}
+
+::-webkit-scrollbar-corner {
+  background: #0c0f1d;
 }
 
 body {

@@ -99,6 +99,29 @@ fastify.post('/api/auth/login', async (requisicao, resposta) => {
   } finally {
     cliente.release();
   }
+});
+
+// 2.0 Verificar se a Professora já está cadastrada
+fastify.get('/api/auth/professor/status', async () => {
+  const cliente = await pool.connect();
+  try {
+    const res = await cliente.query(
+      "SELECT id, nome, email FROM usuarios WHERE papel = 'professor' LIMIT 1"
+    );
+    if (res.rows.length === 0) {
+      return { existe: false, configurado: false };
+    }
+    return {
+      existe: true,
+      configurado: true,
+      nome: res.rows[0].nome,
+      email: res.rows[0].email
+    };
+  } finally {
+    cliente.release();
+  }
+});
+
 // 2.1 Configuração de Credenciais da Professora (Primeiro Acesso ou Alteração)
 fastify.post('/api/auth/professor/configurar-credenciais', async (requisicao, resposta) => {
   const { nome, email, senha } = requisicao.body || {};

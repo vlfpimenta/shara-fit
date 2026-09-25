@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { IconeChave, IconeFechar, IconeUsuario } from '../../componentes/icones';
 import { ServicoArmazenamento } from '../../servicos/armazenamento';
 import { UsuarioSessao } from '../../tipos';
@@ -17,30 +17,59 @@ export const ModalLogin: React.FC<PropriedadesModalLogin> = ({
   aoAbrirNovoAluno
 }) => {
   const [abaAtiva, setAbaAtiva] = useState<'aluno' | 'professor'>(abaInicial);
-  const [email, setEmail] = useState<string>(() =>
-    abaInicial === 'professor' ? ServicoArmazenamento.obterDadosProfessora().email : ''
-  );
+  const [email, setEmail] = useState<string>('');
   const [senha, setSenha] = useState<string>('');
   const [erro, setErro] = useState<string>('');
   const [carregando, setCarregando] = useState<boolean>(false);
 
-  // Estados para Primeiro Acesso da Professora
+  // Estados da Professora
+  const [verificandoStatus, setVerificandoStatus] = useState<boolean>(false);
+  const [professorConfigurado, setProfessorConfigurado] = useState<boolean | null>(null);
   const [modoPrimeiroAcessoProfessora, setModoPrimeiroAcessoProfessora] = useState<boolean>(false);
   const [nomeProf, setNomeProf] = useState<string>('Sara');
   const [emailProf, setEmailProf] = useState<string>('');
   const [senhaProf, setSenhaProf] = useState<string>('');
   const [confirmarSenhaProf, setConfirmarSenhaProf] = useState<string>('');
 
+  const checarStatusProfessora = async () => {
+    setVerificandoStatus(true);
+    setErro('');
+    try {
+      const status = await ServicoArmazenamento.verificarStatusProfessora();
+      setProfessorConfigurado(status.configurado);
+      if (!status.configurado) {
+        setModoPrimeiroAcessoProfessora(true);
+        setNomeProf('Sara');
+        setEmailProf('');
+      } else {
+        setModoPrimeiroAcessoProfessora(false);
+        if (status.email) {
+          setEmail(status.email);
+        }
+      }
+    } catch {
+      setProfessorConfigurado(false);
+      setModoPrimeiroAcessoProfessora(true);
+    } finally {
+      setVerificandoStatus(false);
+    }
+  };
+
+  useEffect(() => {
+    if (abaAtiva === 'professor') {
+      checarStatusProfessora();
+    } else {
+      setErro('');
+    }
+  }, [abaAtiva]);
+
   const trocarAba = (aba: 'aluno' | 'professor') => {
     setAbaAtiva(aba);
     setErro('');
-    setModoPrimeiroAcessoProfessora(false);
-    if (aba === 'professor') {
-      setEmail(ServicoArmazenamento.obterDadosProfessora().email);
-    } else {
+    setSenha('');
+    if (aba === 'aluno') {
       setEmail('');
     }
-    setSenha('');
   };
 
   const executarLogin = async (e: React.FormEvent) => {
@@ -60,7 +89,7 @@ export const ModalLogin: React.FC<PropriedadesModalLogin> = ({
       aoFechar();
     } catch {
       setCarregando(false);
-      setErro('Erro inesperado ao realizar login.');
+      setErro('Erro ao realizar login.');
     }
   };
 
@@ -69,13 +98,13 @@ export const ModalLogin: React.FC<PropriedadesModalLogin> = ({
     setErro('');
 
     if (!emailProf.trim() || !emailProf.includes('@')) {
-      return setErro('Por favor, informe um e-mail válido.');
+      return setErro('Informe um e-mail válido.');
     }
     if (!senhaProf || senhaProf.length < 6) {
-      return setErro('A senha deve possuir no mínimo 6 caracteres.');
+      return setErro('A senha deve ter no mínimo 6 caracteres.');
     }
     if (senhaProf !== confirmarSenhaProf) {
-      return setErro('As senhas digitadas não conferem.');
+      return setErro('As senhas não conferem.');
     }
 
     setCarregando(true);
@@ -120,8 +149,8 @@ export const ModalLogin: React.FC<PropriedadesModalLogin> = ({
             <h3 className="titulo-modal">
               {abaAtiva === 'professor'
                 ? modoPrimeiroAcessoProfessora
-                  ? 'Primeiro Acesso: Cadastro da Professora'
-                  : 'Acesso Professora Sara'
+                  ? 'Cadastro da Professora'
+                  : 'Acesso Professora'
                 : 'Acesso de Aluno'}
             </h3>
           </div>
@@ -198,25 +227,29 @@ export const ModalLogin: React.FC<PropriedadesModalLogin> = ({
           </div>
         )}
 
-        {/* Área da Professora: Primeiro Acesso vs Login Padrão */}
-        {abaAtiva === 'professor' && modoPrimeiroAcessoProfessora ? (
-          /* Formulário de Primeiro Acesso da Professora */
+        {/* Verificação inicial do status do professor */}
+        {abaAtiva === 'professor' && verificandoStatus ? (
+          <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#94a3b8', fontSize: '0.9rem' }}>
+            <div style={{ marginBottom: '0.5rem' }}>⏳ Verificando cadastro...</div>
+          </div>
+        ) : abaAtiva === 'professor' && modoPrimeiroAcessoProfessora ? (
+          /* Formulário de Cadastro da Professora (quando não existe credencial ou clicou em alterar) */
           <form onSubmit={executarCadastroProfessora} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div
               style={{
                 background: 'rgba(255, 46, 126, 0.08)',
                 border: '1px solid rgba(255, 46, 126, 0.25)',
-                padding: '0.8rem',
+                padding: '0.75rem',
                 borderRadius: '8px',
-                fontSize: '0.82rem',
+                fontSize: '0.85rem',
                 color: '#cbd5e1'
               }}
             >
-              Cadastre seu e-mail pessoal e defina sua senha para administrar o sistema com total segurança.
+              Defina seu e-mail e senha para acesso exclusivo à administração.
             </div>
 
             <div className="grupo-campo">
-              <label className="rotulo-campo">Nome da Professora</label>
+              <label className="rotulo-campo">Nome</label>
               <input
                 type="text"
                 className="campo-texto"
@@ -227,19 +260,19 @@ export const ModalLogin: React.FC<PropriedadesModalLogin> = ({
             </div>
 
             <div className="grupo-campo">
-              <label className="rotulo-campo">Seu E-mail Pessoal</label>
+              <label className="rotulo-campo">E-mail</label>
               <input
                 type="email"
                 className="campo-texto"
                 required
-                placeholder="exemplo@gmail.com"
+                placeholder="seuemail@exemplo.com"
                 value={emailProf}
                 onChange={(e) => setEmailProf(e.target.value)}
               />
             </div>
 
             <div className="grupo-campo">
-              <label className="rotulo-campo">Criar Nova Senha</label>
+              <label className="rotulo-campo">Senha</label>
               <input
                 type="password"
                 className="campo-texto"
@@ -251,12 +284,12 @@ export const ModalLogin: React.FC<PropriedadesModalLogin> = ({
             </div>
 
             <div className="grupo-campo">
-              <label className="rotulo-campo">Confirmar Nova Senha</label>
+              <label className="rotulo-campo">Confirmar Senha</label>
               <input
                 type="password"
                 className="campo-texto"
                 required
-                placeholder="Repita a nova senha"
+                placeholder="Repita a senha"
                 value={confirmarSenhaProf}
                 onChange={(e) => setConfirmarSenhaProf(e.target.value)}
               />
@@ -268,109 +301,69 @@ export const ModalLogin: React.FC<PropriedadesModalLogin> = ({
               disabled={carregando}
               style={{ width: '100%', marginTop: '0.4rem', background: 'var(--gradiente-primario)' }}
             >
-              {carregando ? 'Salvando...' : 'Salvar Credenciais e Acessar Painel'}
+              {carregando ? 'Cadastrando...' : 'Cadastrar e Acessar'}
             </button>
 
-            <button
-              type="button"
-              className="botao-secundario"
-              onClick={() => {
-                setModoPrimeiroAcessoProfessora(false);
-                setErro('');
-              }}
-              style={{ width: '100%', fontSize: '0.85rem' }}
-            >
-              Voltar ao Login com Senha Atual
-            </button>
+            {professorConfigurado && (
+              <button
+                type="button"
+                className="botao-secundario"
+                onClick={() => {
+                  setModoPrimeiroAcessoProfessora(false);
+                  setErro('');
+                }}
+                style={{ width: '100%', fontSize: '0.85rem' }}
+              >
+                Voltar ao Login
+              </button>
+            )}
           </form>
         ) : (
-          /* Formulário de Login Padrão (Aluno ou Professora) */
-          <>
-            {/* Aviso de Primeiro Acesso quando estiver na aba da Professora */}
-            {abaAtiva === 'professor' && (
-              <div
-                style={{
-                  background: 'rgba(255, 46, 126, 0.08)',
-                  border: '1px solid rgba(255, 46, 126, 0.25)',
-                  borderRadius: '10px',
-                  padding: '0.8rem 1rem',
-                  marginBottom: '1rem',
-                  fontSize: '0.83rem',
-                  color: '#cbd5e1'
-                }}
-              >
-                <div style={{ fontWeight: 700, color: '#ff80aa', marginBottom: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  🔑 Primeiro Acesso da Professora?
-                </div>
-                Você pode entrar com a credencial inicial (<code>sara@sharaef.com.br</code> / <code>sara123</code>) ou{' '}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setModoPrimeiroAcessoProfessora(true);
-                    setErro('');
-                  }}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#38bdf8',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    textDecoration: 'underline',
-                    padding: 0
-                  }}
-                >
-                  cadastrar seu próprio e-mail e senha aqui
-                </button>.
-              </div>
-            )}
+          /* Formulário de Login Padrão (Aluno ou Professora já cadastrada) */
+          <form onSubmit={executarLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div className="grupo-campo">
+              <label className="rotulo-campo">E-mail</label>
+              <input
+                type="email"
+                className="campo-texto"
+                required
+                placeholder="seuemail@exemplo.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
 
-            <form onSubmit={executarLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div className="grupo-campo">
-                <label className="rotulo-campo">E-mail Cadastrado</label>
-                <div style={{ position: 'relative' }}>
-                  <input
-                    type="email"
-                    className="campo-texto"
-                    required
-                    placeholder={abaAtiva === 'professor' ? 'sara@sharaef.com.br' : 'seuemail@exemplo.com'}
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-              </div>
+            <div className="grupo-campo">
+              <label className="rotulo-campo">Senha</label>
+              <input
+                type="password"
+                className="campo-texto"
+                required
+                placeholder="Sua senha"
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+              />
+            </div>
 
-              <div className="grupo-campo">
-                <label className="rotulo-campo">Senha</label>
-                <input
-                  type="password"
-                  className="campo-texto"
-                  required
-                  placeholder="Digite sua senha"
-                  value={senha}
-                  onChange={(e) => setSenha(e.target.value)}
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="botao-primario"
-                disabled={carregando}
-                style={{
-                  width: '100%',
-                  marginTop: '0.5rem',
-                  background: abaAtiva === 'professor' ? 'var(--gradiente-primario)' : 'var(--gradiente-ciano)'
-                }}
-              >
-                {carregando ? 'Entrando...' : abaAtiva === 'professor' ? 'Acessar Painel de Controle' : 'Entrar e Ver Meus Treinos'}
-              </button>
-            </form>
-          </>
+            <button
+              type="submit"
+              className="botao-primario"
+              disabled={carregando}
+              style={{
+                width: '100%',
+                marginTop: '0.4rem',
+                background: abaAtiva === 'professor' ? 'var(--gradiente-primario)' : 'var(--gradiente-ciano)'
+              }}
+            >
+              {carregando ? 'Entrando...' : abaAtiva === 'professor' ? 'Acessar Painel' : 'Entrar'}
+            </button>
+          </form>
         )}
 
-        {/* Rodapé do Modal */}
+        {/* Rodapé da Modal */}
         {abaAtiva === 'aluno' && (
-          <div style={{ marginTop: '1.5rem', textAlign: 'center', borderTop: '1px solid #28325c', paddingTop: '1rem' }}>
-            <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Ainda não tem cadastro? </span>
+          <div style={{ marginTop: '1.2rem', textAlign: 'center', borderTop: '1px solid #28325c', paddingTop: '0.8rem' }}>
+            <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Novo aluno? </span>
             <button
               onClick={() => {
                 aoFechar();
@@ -386,14 +379,8 @@ export const ModalLogin: React.FC<PropriedadesModalLogin> = ({
                 textDecoration: 'underline'
               }}
             >
-              Preencher Anamnese
+              Cadastre-se aqui
             </button>
-          </div>
-        )}
-
-        {abaAtiva === 'professor' && !modoPrimeiroAcessoProfessora && (
-          <div style={{ marginTop: '1.2rem', textAlign: 'center', fontSize: '0.78rem', color: '#64748b' }}>
-            Acesso exclusivo para a professora Sara. Credenciais seguras e isolamento total de dados.
           </div>
         )}
       </div>

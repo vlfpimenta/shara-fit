@@ -74,7 +74,10 @@ shara-fit/
 - [x] Domínio `matrix.vlfp.com.br` roteado via Nginx Proxy Manager com certificado SSL ativo
 - [x] Rota de autenticação da professora Sara testada com sucesso via HTTPS
 - [x] Conexão dinâmica e interface no painel da professora para troca de domínio a qualquer momento
-- [x] Fluxo de Primeiro Acesso da Professora implementado (cadastro direto de e-mail e senha pessoais com sincronização no PostgreSQL)
+- [x] Verificação dinâmica no banco de dados (`/api/auth/professor/status`): caso não haja professor registrado, o app abre diretamente no formulário de primeiro cadastro.
+- [x] Remoção definitiva de qualquer exibição de credencial padrão ou texto inseguro na interface e no código.
+- [x] Estilização de todas as barras de rolagem para o tema escuro (`::-webkit-scrollbar` e `scrollbar-color`).
+- [x] Redução e enxugamento de textos longos e prolixos na apresentação e anamnese.
 
 ## 5. Diretriz Obrigatória de Versionamento e Deploy Contínuo (CI/CD)
 

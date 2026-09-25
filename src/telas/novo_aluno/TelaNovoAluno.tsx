@@ -174,9 +174,9 @@ export const TelaNovoAluno: React.FC<PropriedadesTelaNovoAluno> = ({ aoConcluirC
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
             <span className="badge badge-primaria">Anamnese Oficial</span>
           </div>
-          <h2 style={{ fontSize: '1.4rem', color: '#ffffff' }}>Questionário de Anamnese & Cadastro</h2>
-          <p style={{ color: '#94a3b8', fontSize: '0.88rem' }}>
-            Responda as perguntas a seguir com o máximo de sinceridade para que a professora Sara monte seu treino individualizado.
+          <h2 style={{ fontSize: '1.3rem', color: '#ffffff' }}>Anamnese e Cadastro</h2>
+          <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>
+            Preencha seus dados para elaboração do seu treino.
           </p>
         </div>
 
@@ -586,9 +586,9 @@ export const TelaNovoAluno: React.FC<PropriedadesTelaNovoAluno> = ({ aoConcluirC
                     marginBottom: '0.5rem'
                   }}
                 >
-                  <h4 style={{ color: '#38bdf8', marginBottom: '0.3rem', fontSize: '0.95rem' }}>Quase pronto, {formulario.nome}!</h4>
-                  <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>
-                    Agora crie seus dados de login. Com este e-mail e senha você acessará sua ficha de treinos no aplicativo.
+                  <h4 style={{ color: '#38bdf8', marginBottom: '0.2rem', fontSize: '0.95rem' }}>Acesso do Aluno</h4>
+                  <p style={{ color: '#94a3b8', fontSize: '0.84rem' }}>
+                    Defina seu e-mail e senha para visualizar suas fichas.
                   </p>
                 </div>
 

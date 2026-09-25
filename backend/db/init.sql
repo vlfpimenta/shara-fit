@@ -81,15 +81,5 @@ CREATE TABLE IF NOT EXISTS exercicios_divisao (
     cargas_registradas JSONB DEFAULT '[]'::jsonb
 );
 
--- Inserção da Conta Inicial da Professora Sara
--- Senha inicial: sara123 (hash bcrypt)
-INSERT INTO usuarios (id, papel, nome, email, senha_hash, cref, status)
-VALUES (
-    'prof-sara-1',
-    'professor',
-    'Sara',
-    'sara@sharaef.com.br',
-    '$2a$10$uA.osiT.X1bf5wp3/Z5M3.8KZb1uu6DwH0M6Y/Px9/ISQInXSVdzm',
-    '012345-G/SP',
-    'ativo'
-) ON CONFLICT (email) DO NOTHING;
+-- Contas de professor são criadas no primeiro acesso diretamente pelo app Shara-EF
+
