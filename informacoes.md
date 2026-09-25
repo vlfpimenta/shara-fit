@@ -82,8 +82,9 @@ shara-fit/
 - [x] Barra de status de tempo fixa no rodapé para mobile, com espaçamento adequado garantindo rolagem livre do rodapé e textos acima da barra.
 - [x] Integração natural das imagens da professora Sara na landing page: retrato vertical (`shara-vert.png`) no Hero principal com badge de status e banner panorâmico (`shara-hor.png`) destacando a metodologia em qualquer ambiente de treino.
 - [x] Botão de instalação PWA ("Instalar App no Telefone") adicionado ao final da anamnese (etapa 4 e tela de sucesso) e no painel da professora com suporte nativo e guia ilustrado para iOS/Android.
-- [x] Limpeza visual da landing page: remoção do card "App PWA Direto" e do link redundante "Área da professora Sara".
 - [x] Ocultação dos textos e links de rodapé na área do aluno, oferecendo visual limpo e imersivo de aplicativo nativo.
+- [x] Otimização da interface mobile no painel da professora: substituição da tabela espremida por cartões individuais (`.card-aluno-mobile`), redução e proporcionalidade dos badges (`.badge`) e introdução da classe `.tag-objetivo` com texto formatado naturalmente sem caixa alta forçada.
+- [x] Sincronização remota automática com a VPS: implementação do endpoint `GET /api/alunos` no Fastify com normalização de campos da anamnese, integração de `sincronizarAlunosRemoto()` no frontend ao inicializar o painel, botão "🔄 Sincronizar" no cabeçalho e persistência de token JWT.
 
 ## 5. Diretriz Obrigatória de Versionamento e Deploy Contínuo (CI/CD)
 

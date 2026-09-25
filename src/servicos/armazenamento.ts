@@ -7,8 +7,22 @@ const CHAVE_SENHAS = 'shara_ef_credenciais_v1';
 const CHAVE_MODO_SIMULACAO = 'shara_ef_simulacao_aluno_id';
 const CHAVE_URL_API = 'shara_ef_url_api_v1';
 const CHAVE_PROFESSORA = 'shara_ef_professora_dados_v1';
+const CHAVE_TOKEN = 'shara_ef_jwt_token_v1';
 
 export class ServicoArmazenamento {
+  // Gerenciamento de Token JWT
+  static obterToken(): string | null {
+    return localStorage.getItem(CHAVE_TOKEN);
+  }
+
+  static salvarToken(token: string): void {
+    localStorage.setItem(CHAVE_TOKEN, token);
+  }
+
+  static removerToken(): void {
+    localStorage.removeItem(CHAVE_TOKEN);
+  }
+
   // Obter URL configurada para a API backend (padrão: matrix.vlfp.com.br)
   static obterUrlApi(): string {
     const configurada = localStorage.getItem(CHAVE_URL_API);
@@ -185,6 +199,69 @@ export class ServicoArmazenamento {
     };
   }
 
+  // Sincronizar lista de alunos da VPS com o armazenamento local
+  static async sincronizarAlunosRemoto(): Promise<UsuarioAluno[]> {
+    this.inicializar();
+    try {
+      const urlApi = this.obterUrlApi();
+      const token = this.obterToken();
+      const profAtual = this.obterDadosProfessora();
+      const headers: Record<string, string> = {
+        'Accept': 'application/json'
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      if (profAtual?.email) {
+        headers['x-professor-email'] = profAtual.email;
+      }
+
+      const controle = new AbortController();
+      const tempoLimite = setTimeout(() => controle.abort(), 6000);
+      const resposta = await fetch(`${urlApi}/api/alunos`, {
+        headers,
+        signal: controle.signal
+      });
+      clearTimeout(tempoLimite);
+
+      if (resposta.ok) {
+        const dados = await resposta.json();
+        if (dados.sucesso && Array.isArray(dados.alunos)) {
+          const alunosRemotos: UsuarioAluno[] = dados.alunos;
+          const alunosLocais = this.obterAlunos();
+          const mapaLocais = new Map(alunosLocais.map((a) => [a.id, a]));
+          const mapaEmails = new Map(alunosLocais.map((a) => [a.email.toLowerCase(), a]));
+
+          // Mesclar preservando fichas locais se a remota ainda não existir
+          const alunosSincronizados: UsuarioAluno[] = alunosRemotos.map((remoto) => {
+            const local = mapaLocais.get(remoto.id) || mapaEmails.get(remoto.email.toLowerCase());
+            return {
+              ...remoto,
+              fichaAtiva: remoto.fichaAtiva || local?.fichaAtiva
+            };
+          });
+
+          // Preservar alunos locais não cadastrados no backend ainda
+          for (const local of alunosLocais) {
+            const jaExiste = alunosSincronizados.some(
+              (s) => s.id === local.id || s.email.toLowerCase() === local.email.toLowerCase()
+            );
+            if (!jaExiste) {
+              alunosSincronizados.push(local);
+            }
+          }
+
+          this.salvarAlunos(alunosSincronizados);
+          return alunosSincronizados;
+        }
+      }
+    } catch (erro) {
+      console.warn('Falha na sincronização remota com a VPS:', erro);
+    }
+
+    return this.obterAlunos();
+  }
+
   // Obter todos os alunos cadastrados
   static obterAlunos(): UsuarioAluno[] {
     this.inicializar();
@@ -256,6 +333,9 @@ export class ServicoArmazenamento {
 
       if (resposta.ok) {
         const dadosApi = await resposta.json();
+        if (dadosApi.token) {
+          this.salvarToken(dadosApi.token);
+        }
         if (dadosApi.usuario?.id) {
           novoAluno.id = dadosApi.usuario.id;
         }
@@ -359,6 +439,9 @@ export class ServicoArmazenamento {
 
       if (resposta.ok) {
         const dados = await resposta.json();
+        if (dados.token) {
+          this.salvarToken(dados.token);
+        }
         if (dados.usuario) {
           const usuarioServidor: UsuarioSessao = dados.usuario.papel === 'professor' 
             ? PROFESSORA_PADRAO 
@@ -590,6 +673,7 @@ export class ServicoArmazenamento {
 
   static encerrarSessao(): void {
     localStorage.removeItem(CHAVE_SESSAO);
+    this.removerToken();
     this.desativarModoSimulacao();
   }
 

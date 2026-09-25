@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BIBLIOTECA_EXERCICIOS } from '../../dados/iniciais';
 import {
   IconeBloquear,
@@ -24,6 +24,29 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
   const [buscaAluno, setBuscaAluno] = useState<string>('');
   const [alunoSelecionadoAnamnese, setAlunoSelecionadoAnamnese] = useState<UsuarioAluno | null>(null);
   const [alunoParaPrescrever, setAlunoParaPrescrever] = useState<UsuarioAluno | null>(null);
+
+  // Estados de Sincronização com VPS
+  const [sincronizandoAlunos, setSincronizandoAlunos] = useState<boolean>(false);
+  const [mensagemSincronizacao, setMensagemSincronizacao] = useState<string>('');
+
+  const sincronizarAlunos = async () => {
+    setSincronizandoAlunos(true);
+    try {
+      const listaAtualizada = await ServicoArmazenamento.sincronizarAlunosRemoto();
+      setAlunos(listaAtualizada);
+      const agora = new Date();
+      const horaStr = `${String(agora.getHours()).padStart(2, '0')}:${String(agora.getMinutes()).padStart(2, '0')}`;
+      setMensagemSincronizacao(`Atualizado às ${horaStr}`);
+    } catch {
+      setMensagemSincronizacao('Modo offline');
+    } finally {
+      setSincronizandoAlunos(false);
+    }
+  };
+
+  useEffect(() => {
+    sincronizarAlunos();
+  }, []);
 
   // Estados de Gestão de Aluno (Editar, Desativar e Excluir)
   const [alunoParaEditar, setAlunoParaEditar] = useState<UsuarioAluno | null>(null);
@@ -245,6 +268,31 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
               texto="📱 Instalar App no Telefone"
               estilo={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', borderRadius: '8px' }}
             />
+            <button
+              className="botao-secundario"
+              onClick={sincronizarAlunos}
+              disabled={sincronizandoAlunos}
+              style={{
+                padding: '0.35rem 0.75rem',
+                fontSize: '0.8rem',
+                borderRadius: '8px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                opacity: sincronizandoAlunos ? 0.7 : 1
+              }}
+              title="Sincronizar lista com o banco de dados na VPS"
+            >
+              <span style={{ display: 'inline-block', animation: sincronizandoAlunos ? 'spin 1s infinite linear' : 'none' }}>
+                🔄
+              </span>
+              <span>{sincronizandoAlunos ? 'Sincronizando...' : 'Sincronizar'}</span>
+            </button>
+            {mensagemSincronizacao && (
+              <span style={{ fontSize: '0.75rem', color: '#94a3b8', alignSelf: 'center' }}>
+                {mensagemSincronizacao}
+              </span>
+            )}
           </div>
         </div>
 
@@ -293,7 +341,8 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
           <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Gestão completa de acessos e fichas</span>
         </div>
 
-        <div style={{ overflowX: 'auto' }}>
+        {/* Visualização em Tabela para Desktop */}
+        <div className="tabela-desktop-alunos">
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
             <thead>
               <tr style={{ background: '#0e1224', color: '#64748b', borderBottom: '1px solid #28325c' }}>
@@ -327,7 +376,7 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
                     </td>
 
                     <td style={{ padding: '1rem 1rem' }}>
-                      <span className="badge badge-primaria" style={{ marginBottom: '0.3rem' }}>
+                      <span className="tag-objetivo" style={{ marginBottom: '0.35rem' }}>
                         {aluno.anamnese.objetivoPrincipal}
                       </span>
                       <div style={{ fontSize: '0.82rem', color: '#cbd5e1' }}>{aluno.anamnese.contato}</div>
@@ -470,6 +519,164 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Visualização em Cartões Mobile Otimizados */}
+        <div className="lista-cards-mobile-alunos">
+          {alunosFiltrados.length === 0 ? (
+            <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>
+              Nenhum aluno encontrado com o filtro atual.
+            </div>
+          ) : (
+            alunosFiltrados.map((aluno) => (
+              <div key={aluno.id} className="card-aluno-mobile">
+                {/* Cabeçalho do Card: Nome e Status */}
+                <div className="card-aluno-mobile-cabecalho">
+                  <div style={{ flex: 1 }}>
+                    <div className="card-aluno-mobile-nome">{aluno.nome}</div>
+                    <div className="card-aluno-mobile-subtitulo">{aluno.email}</div>
+                  </div>
+                  <div>
+                    {aluno.status === 'ativo' ? (
+                      <span className="badge badge-sucesso">Treino Ativo</span>
+                    ) : aluno.status === 'inativo' ? (
+                      <span
+                        className="badge"
+                        style={{
+                          background: 'rgba(239, 68, 68, 0.15)',
+                          border: '1px solid #ef4444',
+                          color: '#fca5a5'
+                        }}
+                      >
+                        Inativo
+                      </span>
+                    ) : (
+                      <span className="badge badge-aviso">Aguardando Ficha</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Objetivo e Métricas do Aluno */}
+                <div className="card-aluno-mobile-metadados">
+                  <div>
+                    <span className="tag-objetivo">{aluno.anamnese.objetivoPrincipal}</span>
+                  </div>
+                  <div className="card-aluno-mobile-metricas">
+                    {aluno.anamnese.contato && (
+                      <span>📞 {aluno.anamnese.contato}</span>
+                    )}
+                    <span>⚖️ {aluno.anamnese.peso}kg • {aluno.anamnese.altura}cm</span>
+                    {aluno.anamnese.idade && <span>🎂 {aluno.anamnese.idade} anos</span>}
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                    Cadastrado em {aluno.dataCadastro}
+                  </div>
+                </div>
+
+                {/* Grade de Ações Mobile */}
+                <div className="card-aluno-mobile-acoes">
+                  <button
+                    className="botao-primario"
+                    onClick={() => iniciarPrescricao(aluno)}
+                    style={{ padding: '0.45rem 0.6rem', fontSize: '0.8rem', justifyContent: 'center' }}
+                  >
+                    <IconeEditar tamanho={14} />
+                    <span>{aluno.fichaAtiva ? 'Treino' : 'Prescrever'}</span>
+                  </button>
+
+                  <button
+                    className="botao-secundario"
+                    onClick={() => setAlunoSelecionadoAnamnese(aluno)}
+                    style={{ padding: '0.45rem 0.6rem', fontSize: '0.8rem', justifyContent: 'center' }}
+                  >
+                    <IconeInformacao tamanho={14} />
+                    <span>Anamnese</span>
+                  </button>
+
+                  <button
+                    className="botao-secundario"
+                    onClick={() => abrirEdicaoAluno(aluno)}
+                    style={{ padding: '0.45rem 0.6rem', fontSize: '0.8rem', justifyContent: 'center' }}
+                  >
+                    <IconeEditar tamanho={14} />
+                    <span>Editar</span>
+                  </button>
+
+                  <button
+                    onClick={() => alternarStatusAluno(aluno)}
+                    style={{
+                      background: aluno.status === 'inativo' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                      border: aluno.status === 'inativo' ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(245, 158, 11, 0.4)',
+                      color: aluno.status === 'inativo' ? '#6ee7b7' : '#fcd34d',
+                      padding: '0.45rem 0.6rem',
+                      borderRadius: '8px',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.3rem'
+                    }}
+                  >
+                    {aluno.status === 'inativo' ? (
+                      <>
+                        <IconeDesbloquear tamanho={14} />
+                        <span>Reativar</span>
+                      </>
+                    ) : (
+                      <>
+                        <IconeBloquear tamanho={14} />
+                        <span>Desativar</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => aoAtivarModoAluno(aluno.id)}
+                    style={{
+                      background: 'rgba(139, 0, 255, 0.15)',
+                      border: '1px solid rgba(139, 0, 255, 0.4)',
+                      color: '#c084fc',
+                      padding: '0.45rem 0.6rem',
+                      borderRadius: '8px',
+                      fontSize: '0.8rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.3rem'
+                    }}
+                  >
+                    <IconeOlho tamanho={14} />
+                    <span>Modo Aluno</span>
+                  </button>
+
+                  <button
+                    onClick={() => setAlunoParaExcluir(aluno)}
+                    style={{
+                      background: 'rgba(239, 68, 68, 0.12)',
+                      border: '1px solid rgba(239, 68, 68, 0.35)',
+                      color: '#fca5a5',
+                      padding: '0.45rem 0.6rem',
+                      borderRadius: '8px',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.25rem'
+                    }}
+                  >
+                    <IconeLixeira tamanho={14} />
+                    <span>Excluir</span>
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
