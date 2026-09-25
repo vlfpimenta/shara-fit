@@ -241,16 +241,16 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
   });
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', paddingBottom: '5rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', paddingBottom: '3.5rem' }}>
       {/* Cabeçalho do Painel da Sara */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.15rem' }}>
             <span className="badge badge-primaria">Área Administrativa</span>
-            <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Professora Sara</span>
+            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Professora Sara</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginTop: '0.3rem', flexWrap: 'wrap' }}>
-            <h1 style={{ fontSize: '1.8rem', color: '#ffffff' }}>Painel de Gestão dos Alunos</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem', flexWrap: 'wrap' }}>
+            <h1 style={{ fontSize: '1.25rem', color: '#ffffff', fontWeight: 800 }}>Painel de Gestão dos Alunos</h1>
             <button
               className="botao-secundario"
               onClick={() => {
@@ -258,7 +258,7 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
                 setResultadoTesteApi(null);
                 setModalConfigApiAberta(true);
               }}
-              style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', borderRadius: '8px' }}
+              style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem', borderRadius: '7px' }}
               title="Configurar domínio da VPS / API"
             >
               ⚙️ Configurar VPS / Domínio
@@ -266,19 +266,19 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
             <BotaoInstalarApp
               variante="secundario"
               texto="📱 Instalar App no Telefone"
-              estilo={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', borderRadius: '8px' }}
+              estilo={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem', borderRadius: '7px' }}
             />
             <button
               className="botao-secundario"
               onClick={sincronizarAlunos}
               disabled={sincronizandoAlunos}
               style={{
-                padding: '0.35rem 0.75rem',
-                fontSize: '0.8rem',
-                borderRadius: '8px',
+                padding: '0.25rem 0.6rem',
+                fontSize: '0.75rem',
+                borderRadius: '7px',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '0.4rem',
+                gap: '0.35rem',
                 opacity: sincronizandoAlunos ? 0.7 : 1
               }}
               title="Sincronizar lista com o banco de dados na VPS"
@@ -289,7 +289,7 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
               <span>{sincronizandoAlunos ? 'Sincronizando...' : 'Sincronizar'}</span>
             </button>
             {mensagemSincronizacao && (
-              <span style={{ fontSize: '0.75rem', color: '#94a3b8', alignSelf: 'center' }}>
+              <span style={{ fontSize: '0.72rem', color: '#94a3b8', alignSelf: 'center' }}>
                 {mensagemSincronizacao}
               </span>
             )}
@@ -297,34 +297,34 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
         </div>
 
         {/* Resumo Rápido */}
-        <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap' }}>
-          <div className="cartao" style={{ padding: '0.7rem 1.1rem', textAlign: 'center' }}>
-            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#ff2e7e' }}>{alunos.length}</div>
-            <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Total de Alunos</div>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <div className="cartao" style={{ padding: '0.45rem 0.75rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#ff2e7e' }}>{alunos.length}</div>
+            <div style={{ fontSize: '0.68rem', color: '#94a3b8' }}>Total de Alunos</div>
           </div>
-          <div className="cartao" style={{ padding: '0.7rem 1.1rem', textAlign: 'center' }}>
-            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#10b981' }}>
+          <div className="cartao" style={{ padding: '0.45rem 0.75rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#10b981' }}>
               {alunos.filter((a) => a.status === 'ativo').length}
             </div>
-            <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Treinos Ativos</div>
+            <div style={{ fontSize: '0.68rem', color: '#94a3b8' }}>Treinos Ativos</div>
           </div>
-          <div className="cartao" style={{ padding: '0.7rem 1.1rem', textAlign: 'center' }}>
-            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#f59e0b' }}>
+          <div className="cartao" style={{ padding: '0.45rem 0.75rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#f59e0b' }}>
               {alunos.filter((a) => a.status === 'aguardando_ficha').length}
             </div>
-            <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Aguardando Ficha</div>
+            <div style={{ fontSize: '0.68rem', color: '#94a3b8' }}>Aguardando Ficha</div>
           </div>
-          <div className="cartao" style={{ padding: '0.7rem 1.1rem', textAlign: 'center' }}>
-            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#ef4444' }}>
+          <div className="cartao" style={{ padding: '0.45rem 0.75rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#ef4444' }}>
               {alunos.filter((a) => a.status === 'inativo').length}
             </div>
-            <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Acesso Desativado</div>
+            <div style={{ fontSize: '0.68rem', color: '#94a3b8' }}>Acesso Desativado</div>
           </div>
         </div>
       </div>
 
       {/* Barra de Busca de Aluno */}
-      <div style={{ display: 'flex', gap: '1rem' }}>
+      <div style={{ display: 'flex', gap: '0.75rem' }}>
         <input
           type="text"
           className="campo-texto"
@@ -336,20 +336,20 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
 
       {/* Tabela / Lista de Alunos Responsiva */}
       <div className="cartao" style={{ padding: '0', overflow: 'hidden' }}>
-        <div style={{ padding: '1.2rem 1.5rem', borderBottom: '1px solid #28325c', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ fontSize: '1.15rem', color: '#ffffff' }}>Lista de Alunos ({alunosFiltrados.length})</h3>
-          <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Gestão completa de acessos e fichas</span>
+        <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #28325c', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 style={{ fontSize: '1rem', color: '#ffffff', fontWeight: 700 }}>Lista de Alunos ({alunosFiltrados.length})</h3>
+          <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Gestão completa de acessos e fichas</span>
         </div>
 
         {/* Visualização em Tabela para Desktop */}
         <div className="tabela-desktop-alunos">
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.82rem' }}>
             <thead>
               <tr style={{ background: '#0e1224', color: '#64748b', borderBottom: '1px solid #28325c' }}>
-                <th style={{ padding: '0.9rem 1.2rem' }}>Aluno</th>
-                <th style={{ padding: '0.9rem 1rem' }}>Objetivo & Contato</th>
-                <th style={{ padding: '0.9rem 1rem' }}>Status</th>
-                <th style={{ padding: '0.9rem 1.2rem', textAlign: 'right' }}>Ações de Gestão</th>
+                <th style={{ padding: '0.65rem 0.85rem' }}>Aluno</th>
+                <th style={{ padding: '0.65rem 0.85rem' }}>Objetivo & Contato</th>
+                <th style={{ padding: '0.65rem 0.85rem' }}>Status</th>
+                <th style={{ padding: '0.65rem 0.85rem', textAlign: 'right' }}>Ações de Gestão</th>
               </tr>
             </thead>
             <tbody>
@@ -369,23 +369,23 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
                       transition: 'background 0.2s ease'
                     }}
                   >
-                    <td style={{ padding: '1rem 1.2rem' }}>
-                      <div style={{ fontWeight: 700, color: '#ffffff', fontSize: '1rem' }}>{aluno.nome}</div>
-                      <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{aluno.email}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Cadastrado em {aluno.dataCadastro}</div>
+                    <td style={{ padding: '0.65rem 0.85rem' }}>
+                      <div style={{ fontWeight: 700, color: '#ffffff', fontSize: '0.92rem' }}>{aluno.nome}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{aluno.email}</div>
+                      <div style={{ fontSize: '0.7rem', color: '#64748b' }}>Cadastrado em {aluno.dataCadastro}</div>
                     </td>
 
-                    <td style={{ padding: '1rem 1rem' }}>
-                      <span className="tag-objetivo" style={{ marginBottom: '0.35rem' }}>
+                    <td style={{ padding: '0.65rem 0.85rem' }}>
+                      <span className="tag-objetivo" style={{ marginBottom: '0.25rem' }}>
                         {aluno.anamnese.objetivoPrincipal}
                       </span>
-                      <div style={{ fontSize: '0.82rem', color: '#cbd5e1' }}>{aluno.anamnese.contato}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                      <div style={{ fontSize: '0.78rem', color: '#cbd5e1' }}>{aluno.anamnese.contato}</div>
+                      <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
                         {aluno.anamnese.peso}kg • {aluno.anamnese.altura}cm
                       </div>
                     </td>
 
-                    <td style={{ padding: '1rem 1rem' }}>
+                    <td style={{ padding: '0.65rem 0.85rem' }}>
                       {aluno.status === 'ativo' ? (
                         <span className="badge badge-sucesso">Treino Ativo</span>
                       ) : aluno.status === 'inativo' ? (
@@ -404,16 +404,16 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
                       )}
                     </td>
 
-                    <td style={{ padding: '1rem 1.2rem', textAlign: 'right' }}>
-                      <div style={{ display: 'inline-flex', gap: '0.4rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                    <td style={{ padding: '0.65rem 0.85rem', textAlign: 'right' }}>
+                      <div style={{ display: 'inline-flex', gap: '0.35rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                         {/* Prescrever / Editar Treino */}
                         <button
                           className="botao-primario"
                           onClick={() => iniciarPrescricao(aluno)}
-                          style={{ padding: '0.4rem 0.75rem', fontSize: '0.8rem' }}
+                          style={{ padding: '0.3rem 0.65rem', fontSize: '0.75rem' }}
                           title="Montar ou alterar ficha de treinos"
                         >
-                          <IconeEditar tamanho={15} />
+                          <IconeEditar tamanho={13} />
                           <span>{aluno.fichaAtiva ? 'Treino' : 'Prescrever'}</span>
                         </button>
 
@@ -421,10 +421,10 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
                         <button
                           className="botao-secundario"
                           onClick={() => abrirEdicaoAluno(aluno)}
-                          style={{ padding: '0.4rem 0.7rem', fontSize: '0.8rem' }}
+                          style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }}
                           title="Editar dados cadastrais do aluno"
                         >
-                          <IconeEditar tamanho={15} />
+                          <IconeEditar tamanho={13} />
                           <span>Editar</span>
                         </button>
 
@@ -435,25 +435,25 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
                             background: aluno.status === 'inativo' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
                             border: aluno.status === 'inativo' ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(245, 158, 11, 0.4)',
                             color: aluno.status === 'inativo' ? '#6ee7b7' : '#fcd34d',
-                            padding: '0.4rem 0.7rem',
-                            borderRadius: '8px',
-                            fontSize: '0.8rem',
+                            padding: '0.3rem 0.6rem',
+                            borderRadius: '7px',
+                            fontSize: '0.75rem',
                             fontWeight: 600,
                             cursor: 'pointer',
                             display: 'inline-flex',
                             alignItems: 'center',
-                            gap: '0.3rem'
+                            gap: '0.25rem'
                           }}
                           title={aluno.status === 'inativo' ? 'Reativar acesso do aluno' : 'Desativar acesso do aluno temporariamente'}
                         >
                           {aluno.status === 'inativo' ? (
                             <>
-                              <IconeDesbloquear tamanho={15} />
+                              <IconeDesbloquear tamanho={13} />
                               <span>Reativar</span>
                             </>
                           ) : (
                             <>
-                              <IconeBloquear tamanho={15} />
+                              <IconeBloquear tamanho={13} />
                               <span>Desativar</span>
                             </>
                           )}
@@ -466,18 +466,18 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
                             background: 'rgba(239, 68, 68, 0.12)',
                             border: '1px solid rgba(239, 68, 68, 0.35)',
                             color: '#fca5a5',
-                            padding: '0.4rem 0.65rem',
-                            borderRadius: '8px',
-                            fontSize: '0.8rem',
+                            padding: '0.3rem 0.55rem',
+                            borderRadius: '7px',
+                            fontSize: '0.75rem',
                             fontWeight: 600,
                             cursor: 'pointer',
                             display: 'inline-flex',
                             alignItems: 'center',
-                            gap: '0.25rem'
+                            gap: '0.2rem'
                           }}
                           title="Excluir aluno definitivamente"
                         >
-                          <IconeLixeira tamanho={15} />
+                          <IconeLixeira tamanho={13} />
                           <span>Excluir</span>
                         </button>
 
@@ -488,18 +488,18 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
                             background: 'rgba(139, 0, 255, 0.15)',
                             border: '1px solid rgba(139, 0, 255, 0.4)',
                             color: '#c084fc',
-                            padding: '0.4rem 0.75rem',
-                            borderRadius: '8px',
-                            fontSize: '0.8rem',
+                            padding: '0.3rem 0.65rem',
+                            borderRadius: '7px',
+                            fontSize: '0.75rem',
                             fontWeight: 700,
                             cursor: 'pointer',
                             display: 'inline-flex',
                             alignItems: 'center',
-                            gap: '0.3rem'
+                            gap: '0.25rem'
                           }}
                           title="Simular visualização idêntica à que o aluno vê no celular"
                         >
-                          <IconeOlho tamanho={15} />
+                          <IconeOlho tamanho={13} />
                           <span>Modo Aluno</span>
                         </button>
 
@@ -507,10 +507,10 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
                         <button
                           className="botao-secundario"
                           onClick={() => setAlunoSelecionadoAnamnese(aluno)}
-                          style={{ padding: '0.4rem 0.7rem', fontSize: '0.8rem' }}
+                          style={{ padding: '0.3rem 0.55rem', fontSize: '0.75rem' }}
                           title="Ver respostas completas da anamnese"
                         >
-                          <IconeInformacao tamanho={15} />
+                          <IconeInformacao tamanho={13} />
                         </button>
                       </div>
                     </td>

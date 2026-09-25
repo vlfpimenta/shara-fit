@@ -1,6 +1,6 @@
 /* ==========================================================================
    Shara-EF - Sistema de Design e Estilos Globais
-   Paleta escura moderna, estética premium, micro-animações e responsividade
+   Paleta escura moderna, escala compacta estilo MiniBOM e micro-animações
    ========================================================================== */
 
 :root {
@@ -29,15 +29,33 @@
 
   /* Sombras e Raios */
   --raio-borda-sm: 8px;
-  --raio-borda-md: 14px;
-  --raio-borda-lg: 20px;
+  --raio-borda-md: 12px;
+  --raio-borda-lg: 16px;
   --raio-borda-pill: 9999px;
 
   --sombra-card: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
   --sombra-neon: 0 0 20px rgba(255, 46, 126, 0.35);
   --sombra-flutuante: 0 20px 35px rgba(0, 0, 0, 0.6);
 
-  --transicao-padrao: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  --transicao-padrao: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html {
+  font-size: 14px; /* Escala base mobile compacta correspondente ao padrão MiniBOM */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+@media (min-width: 640px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 1024px) {
+  html {
+    font-size: 16px;
+  }
 }
 
 * {
@@ -51,8 +69,8 @@
 
 /* Barras de Rolagem Escuras (Dark Mode) */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -62,7 +80,7 @@
 ::-webkit-scrollbar-thumb {
   background: #28325c;
   border-radius: 9999px;
-  border: 2px solid #0c0f1d;
+  border: 1px solid #0c0f1d;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -78,7 +96,7 @@ body {
   background-color: var(--cor-fundo);
   color: var(--cor-texto-principal);
   min-height: 100vh;
-  line-height: 1.5;
+  line-height: 1.45;
   overflow-x: hidden;
   position: relative;
   -webkit-font-smoothing: antialiased;
@@ -90,9 +108,9 @@ body::before {
   position: fixed;
   top: -150px;
   right: -150px;
-  width: 450px;
-  height: 450px;
-  background: radial-gradient(circle, rgba(255, 46, 126, 0.12) 0%, rgba(12, 15, 29, 0) 70%);
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(255, 46, 126, 0.1) 0%, rgba(12, 15, 29, 0) 70%);
   pointer-events: none;
   z-index: 0;
 }
@@ -102,9 +120,9 @@ body::after {
   position: fixed;
   bottom: -200px;
   left: -200px;
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(56, 189, 248, 0.08) 0%, rgba(12, 15, 29, 0) 70%);
+  width: 450px;
+  height: 450px;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.07) 0%, rgba(12, 15, 29, 0) 70%);
   pointer-events: none;
   z-index: 0;
 }
@@ -125,31 +143,38 @@ body::after {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(12, 15, 29, 0.85);
+  background: rgba(12, 15, 29, 0.92);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--cor-borda);
-  padding: 0.75rem 1.25rem;
+  padding: 0.45rem 0.85rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 64px;
+  height: 50px;
+}
+
+@media (min-width: 640px) {
+  .cabecalho-principal {
+    padding: 0.55rem 1.25rem;
+    height: 56px;
+  }
 }
 
 .marca-container {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.55rem;
   text-decoration: none;
   cursor: pointer;
 }
 
 .marca-icone-svg {
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   border-radius: var(--raio-borda-sm);
   background: var(--gradiente-primario);
-  padding: 6px;
+  padding: 5px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -157,13 +182,28 @@ body::after {
   flex-shrink: 0;
 }
 
+@media (min-width: 640px) {
+  .marca-icone-svg {
+    width: 32px;
+    height: 32px;
+    padding: 6px;
+  }
+}
+
 .marca-texto {
-  font-size: 1.35rem;
+  font-size: 1.1rem;
   font-weight: 800;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.4px;
   background: linear-gradient(135deg, #ffffff 40%, #ff80aa 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  line-height: 1.1;
+}
+
+@media (min-width: 640px) {
+  .marca-texto {
+    font-size: 1.25rem;
+  }
 }
 
 .marca-ponto {
@@ -172,9 +212,9 @@ body::after {
 }
 
 .marca-subtitulo {
-  font-size: 0.65rem;
+  font-size: 0.58rem;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.8px;
   color: var(--cor-texto-secundario);
   font-weight: 600;
 }
@@ -182,19 +222,19 @@ body::after {
 .acoes-cabecalho {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .botao-professora-login {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   background: rgba(255, 46, 126, 0.12);
   color: var(--cor-primaria);
   border: 1px solid rgba(255, 46, 126, 0.3);
-  padding: 0.5rem 0.9rem;
+  padding: 0.35rem 0.75rem;
   border-radius: var(--raio-borda-pill);
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
   transition: var(--transicao-padrao);
@@ -211,13 +251,13 @@ body::after {
 .botao-sair {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.35rem;
   background: rgba(239, 68, 68, 0.1);
   color: #f87171;
   border: 1px solid rgba(239, 68, 68, 0.25);
-  padding: 0.45rem 0.8rem;
+  padding: 0.32rem 0.65rem;
   border-radius: var(--raio-borda-pill);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   transition: var(--transicao-padrao);
@@ -235,11 +275,11 @@ body::after {
 .barra-modo-aluno-alerta {
   background: linear-gradient(90deg, #8b00ff 0%, #ff2e7e 100%);
   color: #ffffff;
-  padding: 0.6rem 1rem;
+  padding: 0.38rem 0.75rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   font-weight: 600;
   box-shadow: 0 4px 15px rgba(139, 0, 255, 0.35);
   animation: pulsarBrilho 3s infinite alternate;
@@ -254,10 +294,10 @@ body::after {
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.4);
   color: #ffffff;
-  padding: 0.3rem 0.75rem;
+  padding: 0.22rem 0.6rem;
   border-radius: var(--raio-borda-pill);
   cursor: pointer;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
   transition: var(--transicao-padrao);
 }
@@ -273,33 +313,50 @@ body::after {
 
 .conteudo-principal {
   flex: 1;
-  max-width: 1100px;
+  max-width: 1050px;
   width: 100%;
   margin: 0 auto;
-  padding: 1.5rem 1rem 5rem 1rem;
+  padding: 0.75rem 0.65rem 4rem 0.65rem;
+}
+
+@media (min-width: 640px) {
+  .conteudo-principal {
+    padding: 1.25rem 1.25rem 5rem 1.25rem;
+  }
 }
 
 .botao-primario {
   background: var(--gradiente-primario);
   color: #ffffff;
   border: none;
-  padding: 0.85rem 1.6rem;
-  border-radius: var(--raio-borda-md);
-  font-size: 1rem;
+  padding: 0.5rem 0.9rem;
+  min-height: 36px;
+  border-radius: 10px;
+  font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.6rem;
+  gap: 0.45rem;
   transition: var(--transicao-padrao);
-  box-shadow: 0 4px 15px rgba(255, 0, 85, 0.35);
+  box-shadow: 0 4px 12px rgba(255, 0, 85, 0.3);
   text-decoration: none;
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .botao-primario {
+    padding: 0.55rem 1.15rem;
+    min-height: 38px;
+    font-size: 0.875rem;
+    border-radius: var(--raio-borda-md);
+  }
 }
 
 .botao-primario:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(255, 0, 85, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(255, 0, 85, 0.45);
 }
 
 .botao-primario:active {
@@ -310,38 +367,57 @@ body::after {
   background: rgba(28, 35, 68, 0.7);
   color: var(--cor-texto-principal);
   border: 1px solid var(--cor-borda);
-  padding: 0.85rem 1.6rem;
-  border-radius: var(--raio-borda-md);
-  font-size: 1rem;
+  padding: 0.5rem 0.9rem;
+  min-height: 36px;
+  border-radius: 10px;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.6rem;
+  gap: 0.45rem;
   transition: var(--transicao-padrao);
   backdrop-filter: blur(8px);
   text-decoration: none;
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .botao-secundario {
+    padding: 0.55rem 1.15rem;
+    min-height: 38px;
+    font-size: 0.875rem;
+    border-radius: var(--raio-borda-md);
+  }
 }
 
 .botao-secundario:hover {
   background: var(--cor-superficie-elevada);
   border-color: var(--cor-texto-secundario);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 .botao-icone {
   background: rgba(28, 35, 68, 0.5);
   border: 1px solid var(--cor-borda);
   color: var(--cor-texto-secundario);
-  width: 38px;
-  height: 38px;
-  border-radius: var(--raio-borda-sm);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: var(--transicao-padrao);
+  flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+  .botao-icone {
+    width: 36px;
+    height: 36px;
+  }
 }
 
 .botao-icone:hover {
@@ -353,11 +429,18 @@ body::after {
 .cartao {
   background: var(--gradiente-card);
   border: 1px solid var(--cor-borda);
-  border-radius: var(--raio-borda-lg);
-  padding: 1.5rem;
+  border-radius: 14px;
+  padding: 0.85rem 0.95rem;
   box-shadow: var(--sombra-card);
   backdrop-filter: blur(12px);
   transition: var(--transicao-padrao);
+}
+
+@media (min-width: 640px) {
+  .cartao {
+    border-radius: 16px;
+    padding: 1.25rem 1.4rem;
+  }
 }
 
 .cartao:hover {
@@ -367,13 +450,13 @@ body::after {
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.2rem 0.5rem;
+  gap: 0.25rem;
+  padding: 0.15rem 0.45rem;
   border-radius: var(--raio-borda-pill);
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.3px;
   line-height: 1.2;
 }
 
@@ -401,16 +484,16 @@ body::after {
   border: 1px solid rgba(56, 189, 248, 0.3);
 }
 
-/* Tag de objetivo elegante (evita pílula gigante com letras maiúsculas forçadas) */
+/* Tag de objetivo elegante */
 .tag-objetivo {
   display: inline-block;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: #ff659c;
   background: rgba(255, 46, 126, 0.08);
   border: 1px solid rgba(255, 46, 126, 0.22);
   border-radius: 6px;
-  padding: 0.2rem 0.55rem;
+  padding: 0.15rem 0.45rem;
   line-height: 1.35;
   text-transform: none;
   max-width: 100%;
@@ -431,11 +514,11 @@ body::after {
 .card-aluno-mobile {
   background: #141a36;
   border: 1px solid var(--cor-borda);
-  border-radius: var(--raio-borda-md);
-  padding: 1rem;
+  border-radius: 12px;
+  padding: 0.75rem 0.85rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.6rem;
   transition: var(--transicao-padrao);
 }
 
@@ -447,42 +530,42 @@ body::after {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 0.6rem;
+  gap: 0.5rem;
 }
 
 .card-aluno-mobile-nome {
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: #ffffff;
   line-height: 1.25;
 }
 
 .card-aluno-mobile-subtitulo {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--cor-texto-secundario);
-  margin-top: 0.15rem;
+  margin-top: 0.12rem;
 }
 
 .card-aluno-mobile-metadados {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: 0.4rem;
 }
 
 .card-aluno-mobile-metricas {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.6rem;
-  font-size: 0.8rem;
+  gap: 0.5rem;
+  font-size: 0.75rem;
   color: var(--cor-texto-secundario);
 }
 
 .card-aluno-mobile-acoes {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.5rem;
-  padding-top: 0.6rem;
+  gap: 0.45rem;
+  padding-top: 0.5rem;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
@@ -493,13 +576,13 @@ body::after {
 .grupo-campo {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  margin-bottom: 1.1rem;
+  gap: 0.3rem;
+  margin-bottom: 0.8rem;
   text-align: left;
 }
 
 .rotulo-campo {
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   font-weight: 600;
   color: var(--cor-texto-secundario);
 }
@@ -513,24 +596,34 @@ body::after {
 .campo-textarea {
   background: #0f1325;
   border: 1px solid var(--cor-borda);
-  border-radius: var(--raio-borda-md);
-  padding: 0.8rem 1rem;
+  border-radius: 10px;
+  padding: 0.45rem 0.7rem;
   color: var(--cor-texto-principal);
-  font-size: 0.95rem;
+  font-size: 0.82rem;
   transition: var(--transicao-padrao);
   width: 100%;
   outline: none;
+}
+
+@media (min-width: 640px) {
+  .campo-texto,
+  .campo-select,
+  .campo-textarea {
+    border-radius: 12px;
+    padding: 0.55rem 0.85rem;
+    font-size: 0.875rem;
+  }
 }
 
 .campo-texto:focus,
 .campo-select:focus,
 .campo-textarea:focus {
   border-color: var(--cor-primaria);
-  box-shadow: 0 0 0 3px rgba(255, 46, 126, 0.2);
+  box-shadow: 0 0 0 2px rgba(255, 46, 126, 0.2);
 }
 
 .campo-textarea {
-  min-height: 90px;
+  min-height: 80px;
   resize: vertical;
 }
 
@@ -550,7 +643,7 @@ body::after {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: 0.75rem;
   animation: surgirModal 0.2s ease-out;
 }
 
@@ -562,27 +655,34 @@ body::after {
 .conteudo-modal {
   background: #141930;
   border: 1px solid var(--cor-borda);
-  border-radius: var(--raio-borda-lg);
+  border-radius: 14px;
   width: 100%;
-  max-width: 480px;
-  max-height: 90vh;
+  max-width: 440px;
+  max-height: 92vh;
   overflow-y: auto;
-  padding: 1.8rem;
+  padding: 1rem 1.15rem;
   box-shadow: var(--sombra-flutuante);
   position: relative;
+}
+
+@media (min-width: 640px) {
+  .conteudo-modal {
+    border-radius: 16px;
+    padding: 1.35rem 1.5rem;
+  }
 }
 
 .cabecalho-modal {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   border-bottom: 1px solid var(--cor-borda);
-  padding-bottom: 1rem;
+  padding-bottom: 0.75rem;
 }
 
 .titulo-modal {
-  font-size: 1.25rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: #ffffff;
 }
@@ -593,28 +693,28 @@ body::after {
 
 .cronometro-flutuante {
   position: fixed;
-  bottom: 1.5rem;
-  right: 1.5rem;
+  bottom: 1.25rem;
+  right: 1.25rem;
   z-index: 90;
   background: rgba(20, 25, 48, 0.95);
   backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 46, 126, 0.4);
   border-radius: var(--raio-borda-pill);
-  padding: 0.6rem 1.2rem;
+  padding: 0.45rem 0.9rem;
   display: flex;
   align-items: center;
-  gap: 0.9rem;
+  gap: 0.65rem;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), var(--sombra-neon);
   animation: flutuar 3s ease-in-out infinite;
 }
 
 @keyframes flutuar {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+  50% { transform: translateY(-3px); }
 }
 
 .cronometro-tempo {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   color: #ffffff;
@@ -627,7 +727,7 @@ body::after {
 
 @keyframes pulsarTempo {
   from { transform: scale(1); }
-  to { transform: scale(1.1); }
+  to { transform: scale(1.08); }
 }
 
 /* ==========================================================================
@@ -637,18 +737,25 @@ body::after {
 .rodape-aplicativo {
   margin-top: auto;
   border-top: 1px solid var(--cor-borda);
-  padding: 1.5rem 1rem;
+  padding: 1.25rem 1rem;
   text-align: center;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--cor-texto-sutil);
   background: rgba(12, 15, 29, 0.9);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: center;
+  position: relative;
+  z-index: 10;
 }
 
 .rodape-links {
   display: flex;
   justify-content: center;
-  gap: 1.5rem;
-  margin-bottom: 0.5rem;
+  gap: 1.2rem;
+  margin-bottom: 0.25rem;
+  flex-wrap: wrap;
 }
 
 .rodape-links a {
@@ -662,16 +769,17 @@ body::after {
 }
 
 /* ==========================================================================
-   Responsividade Mobile-first
+   Responsividade Mobile-first (Telas <= 640px)
    ========================================================================== */
 
 @media (max-width: 640px) {
   .cabecalho-principal {
-    padding: 0.6rem 1rem;
+    padding: 0.4rem 0.75rem;
+    height: 48px;
   }
 
   .marca-texto {
-    font-size: 1.15rem;
+    font-size: 1.05rem;
   }
 
   .marca-subtitulo {
@@ -683,12 +791,12 @@ body::after {
   }
 
   .botao-professora-login {
-    padding: 0.45rem;
+    padding: 0.35rem 0.5rem;
     border-radius: var(--raio-borda-sm);
   }
 
   .conteudo-principal {
-    padding: 1rem 0.75rem 2rem 0.75rem;
+    padding: 0.65rem 0.55rem 3.5rem 0.55rem;
   }
 
   /* No mobile: badge de tempo torna-se uma barra de status fixa no rodapé */
@@ -705,7 +813,7 @@ body::after {
     border-bottom: none;
     background: rgba(12, 15, 29, 0.98);
     backdrop-filter: blur(16px);
-    padding: 0.65rem 1rem calc(0.65rem + env(safe-area-inset-bottom, 0px)) 1rem;
+    padding: 0.45rem 0.85rem calc(0.45rem + env(safe-area-inset-bottom, 0px)) 0.85rem;
     box-shadow: 0 -8px 25px rgba(0, 0, 0, 0.7);
     animation: none;
     z-index: 99;
@@ -725,19 +833,19 @@ body::after {
     border-bottom: none;
     background: rgba(12, 15, 29, 0.98);
     backdrop-filter: blur(16px);
-    padding: 0.5rem 1rem calc(0.5rem + env(safe-area-inset-bottom, 0px)) 1rem;
+    padding: 0.4rem 0.85rem calc(0.4rem + env(safe-area-inset-bottom, 0px)) 0.85rem;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.7);
     animation: none;
     z-index: 99;
     justify-content: center;
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.5rem;
   }
 
-  /* Garante que o rodapé e qualquer texto rolem acima da barra de status fixa sem sobreposição */
+  /* Garante que o rodapé role acima da barra fixa */
   .rodape-aplicativo {
-    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
   }
 
   /* Alternância de Tabela Desktop para Cards Mobile */
@@ -748,56 +856,18 @@ body::after {
   .lista-cards-mobile-alunos {
     display: flex !important;
     flex-direction: column;
-    gap: 0.85rem;
-    padding: 0.85rem;
+    gap: 0.65rem;
+    padding: 0.65rem 0;
   }
 
   .badge {
-    font-size: 0.68rem;
-    padding: 0.18rem 0.45rem;
+    font-size: 0.62rem;
+    padding: 0.12rem 0.4rem;
     letter-spacing: 0.2px;
   }
 
   .tag-objetivo {
-    font-size: 0.73rem;
-    padding: 0.18rem 0.45rem;
+    font-size: 0.68rem;
+    padding: 0.12rem 0.4rem;
   }
-}
-
-/* ==========================================================================
-   Rodapé do Aplicativo (LGPD e Créditos)
-   ========================================================================== */
-
-.rodape-aplicativo {
-  margin-top: auto;
-  padding: 2rem 1.5rem;
-  text-align: center;
-  border-top: 1px solid var(--cor-borda);
-  background: rgba(12, 15, 29, 0.6);
-  font-size: 0.85rem;
-  color: var(--cor-texto-sutil);
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  align-items: center;
-  position: relative;
-  z-index: 10;
-}
-
-.rodape-links {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.rodape-links a {
-  color: var(--cor-texto-secundario);
-  text-decoration: none;
-  transition: var(--transicao-padrao);
-}
-
-.rodape-links a:hover {
-  color: var(--cor-primaria);
 }

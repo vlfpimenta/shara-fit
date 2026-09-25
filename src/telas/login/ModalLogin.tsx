@@ -132,19 +132,19 @@ export const ModalLogin: React.FC<PropriedadesModalLogin> = ({
     <div className="overlay-modal" onClick={aoFechar}>
       <div className="conteudo-modal" onClick={(e) => e.stopPropagation()}>
         <div className="cabecalho-modal">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
             <div
               style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '8px',
+                width: '28px',
+                height: '28px',
+                borderRadius: '7px',
                 background: abaAtiva === 'professor' ? '#ff2e7e' : '#38bdf8',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}
             >
-              {abaAtiva === 'professor' ? <IconeChave tamanho={18} cor="#fff" /> : <IconeUsuario tamanho={18} cor="#fff" />}
+              {abaAtiva === 'professor' ? <IconeChave tamanho={15} cor="#fff" /> : <IconeUsuario tamanho={15} cor="#fff" />}
             </div>
             <h3 className="titulo-modal">
               {abaAtiva === 'professor'
@@ -156,9 +156,9 @@ export const ModalLogin: React.FC<PropriedadesModalLogin> = ({
           </div>
           <button
             onClick={aoFechar}
-            style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px' }}
+            style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '3px' }}
           >
-            <IconeFechar tamanho={20} />
+            <IconeFechar tamanho={16} />
           </button>
         </div>
 
@@ -167,9 +167,9 @@ export const ModalLogin: React.FC<PropriedadesModalLogin> = ({
           style={{
             display: 'flex',
             background: '#0c0f1d',
-            borderRadius: '10px',
-            padding: '4px',
-            marginBottom: '1.5rem',
+            borderRadius: '9px',
+            padding: '3px',
+            marginBottom: '1rem',
             border: '1px solid #28325c'
           }}
         >
@@ -178,14 +178,14 @@ export const ModalLogin: React.FC<PropriedadesModalLogin> = ({
             onClick={() => trocarAba('aluno')}
             style={{
               flex: 1,
-              padding: '0.6rem',
-              borderRadius: '8px',
+              padding: '0.45rem',
+              borderRadius: '7px',
               border: 'none',
               background: abaAtiva === 'aluno' ? 'rgba(56, 189, 248, 0.2)' : 'transparent',
               color: abaAtiva === 'aluno' ? '#38bdf8' : '#94a3b8',
               fontWeight: 700,
               cursor: 'pointer',
-              fontSize: '0.85rem',
+              fontSize: '0.78rem',
               transition: 'all 0.2s ease'
             }}
           >
@@ -196,14 +196,14 @@ export const ModalLogin: React.FC<PropriedadesModalLogin> = ({
             onClick={() => trocarAba('professor')}
             style={{
               flex: 1,
-              padding: '0.6rem',
-              borderRadius: '8px',
+              padding: '0.45rem',
+              borderRadius: '7px',
               border: 'none',
               background: abaAtiva === 'professor' ? 'rgba(255, 46, 126, 0.2)' : 'transparent',
               color: abaAtiva === 'professor' ? '#ff2e7e' : '#94a3b8',
               fontWeight: 700,
               cursor: 'pointer',
-              fontSize: '0.85rem',
+              fontSize: '0.78rem',
               transition: 'all 0.2s ease'
             }}
           >
@@ -217,10 +217,10 @@ export const ModalLogin: React.FC<PropriedadesModalLogin> = ({
               background: 'rgba(239, 68, 68, 0.15)',
               border: '1px solid #ef4444',
               color: '#fca5a5',
-              padding: '0.75rem',
+              padding: '0.55rem 0.75rem',
               borderRadius: '8px',
-              fontSize: '0.88rem',
-              marginBottom: '1.2rem'
+              fontSize: '0.8rem',
+              marginBottom: '1rem'
             }}
           >
             ⚠️ {erro}
@@ -362,8 +362,8 @@ export const ModalLogin: React.FC<PropriedadesModalLogin> = ({
 
         {/* Rodapé da Modal */}
         {abaAtiva === 'aluno' && (
-          <div style={{ marginTop: '1.2rem', textAlign: 'center', borderTop: '1px solid #28325c', paddingTop: '0.8rem' }}>
-            <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Novo aluno? </span>
+          <div style={{ marginTop: '0.85rem', textAlign: 'center', borderTop: '1px solid #28325c', paddingTop: '0.6rem' }}>
+            <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>Novo aluno? </span>
             <button
               onClick={() => {
                 aoFechar();
@@ -374,7 +374,7 @@ export const ModalLogin: React.FC<PropriedadesModalLogin> = ({
                 border: 'none',
                 color: '#ff2e7e',
                 fontWeight: 700,
-                fontSize: '0.85rem',
+                fontSize: '0.78rem',
                 cursor: 'pointer',
                 textDecoration: 'underline'
               }}

@@ -143,21 +143,21 @@ export const TelaNovoAluno: React.FC<PropriedadesTelaNovoAluno> = ({ aoConcluirC
   };
 
   return (
-    <div style={{ maxWidth: '720px', margin: '0 auto', padding: '1rem 0' }}>
+    <div style={{ maxWidth: '680px', margin: '0 auto', padding: '0.4rem 0' }}>
       {/* Barra de Progresso do Wizard */}
-      <div style={{ marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
-          <span style={{ fontSize: '0.85rem', color: '#ff2e7e', fontWeight: 700, textTransform: 'uppercase' }}>
+      <div style={{ marginBottom: '1.25rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.45rem' }}>
+          <span style={{ fontSize: '0.75rem', color: '#ff2e7e', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.4px' }}>
             Etapa {etapaAtual} de {totalEtapas}
           </span>
-          <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>
+          <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
             {etapaAtual === 1 && 'Identificação & Biometria'}
             {etapaAtual === 2 && 'Objetivos & Nível de Treino'}
             {etapaAtual === 3 && 'Saúde & Disponibilidade'}
             {etapaAtual === 4 && 'Criar E-mail e Senha'}
           </span>
         </div>
-        <div style={{ width: '100%', height: '6px', background: '#1c2344', borderRadius: '9999px', overflow: 'hidden' }}>
+        <div style={{ width: '100%', height: '5px', background: '#1c2344', borderRadius: '9999px', overflow: 'hidden' }}>
           <div
             style={{
               width: `${(etapaAtual / totalEtapas) * 100}%`,
@@ -171,12 +171,12 @@ export const TelaNovoAluno: React.FC<PropriedadesTelaNovoAluno> = ({ aoConcluirC
 
       <div className="cartao" style={{ position: 'relative' }}>
         {/* Cabeçalho do Formulário */}
-        <div style={{ marginBottom: '1.8rem', borderBottom: '1px solid #28325c', paddingBottom: '1rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
+        <div style={{ marginBottom: '1.2rem', borderBottom: '1px solid #28325c', paddingBottom: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.2rem' }}>
             <span className="badge badge-primaria">Anamnese Oficial</span>
           </div>
-          <h2 style={{ fontSize: '1.3rem', color: '#ffffff' }}>Anamnese e Cadastro</h2>
-          <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>
+          <h2 style={{ fontSize: '1.15rem', color: '#ffffff', fontWeight: 800 }}>Anamnese e Cadastro</h2>
+          <p style={{ color: '#94a3b8', fontSize: '0.78rem' }}>
             Preencha seus dados para elaboração do seu treino.
           </p>
         </div>
@@ -187,10 +187,10 @@ export const TelaNovoAluno: React.FC<PropriedadesTelaNovoAluno> = ({ aoConcluirC
               background: 'rgba(239, 68, 68, 0.15)',
               border: '1px solid #ef4444',
               color: '#fca5a5',
-              padding: '0.8rem 1rem',
-              borderRadius: '10px',
-              fontSize: '0.9rem',
-              marginBottom: '1.2rem'
+              padding: '0.55rem 0.8rem',
+              borderRadius: '8px',
+              fontSize: '0.8rem',
+              marginBottom: '1rem'
             }}
           >
             ⚠️ {erroValidacao}
@@ -198,24 +198,24 @@ export const TelaNovoAluno: React.FC<PropriedadesTelaNovoAluno> = ({ aoConcluirC
         )}
 
         {sucessoCriacao ? (
-          <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+          <div style={{ textAlign: 'center', padding: '1.8rem 1rem' }}>
             <div
               style={{
-                width: '64px',
-                height: '64px',
+                width: '48px',
+                height: '48px',
                 borderRadius: '50%',
                 background: 'rgba(16, 185, 129, 0.2)',
                 border: '2px solid #10b981',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                margin: '0 auto 1.5rem auto'
+                margin: '0 auto 1rem auto'
               }}
             >
-              <IconeCheck tamanho={36} cor="#10b981" />
+              <IconeCheck tamanho={26} cor="#10b981" />
             </div>
-            <h3 style={{ fontSize: '1.5rem', color: '#ffffff', marginBottom: '0.5rem' }}>Cadastro Realizado com Sucesso!</h3>
-            <p style={{ color: '#94a3b8', marginBottom: '1.5rem' }}>
+            <h3 style={{ fontSize: '1.2rem', color: '#ffffff', marginBottom: '0.4rem', fontWeight: 700 }}>Cadastro Realizado com Sucesso!</h3>
+            <p style={{ color: '#94a3b8', fontSize: '0.82rem', marginBottom: '1.2rem' }}>
               Seus dados foram salvos. Redirecionando para a sua área de aluno no Shara-EF...
             </p>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -638,7 +638,7 @@ export const TelaNovoAluno: React.FC<PropriedadesTelaNovoAluno> = ({ aoConcluirC
                   />
                 </div>
 
-                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
                   Ao clicar em concluir, você concorda com a nossa{' '}
                   <a href="/privacidade.html" target="_blank" rel="noreferrer" style={{ color: '#38bdf8' }}>
                     Política de Privacidade (LGPD)
@@ -646,12 +646,12 @@ export const TelaNovoAluno: React.FC<PropriedadesTelaNovoAluno> = ({ aoConcluirC
                   para armazenamento exclusivo do seu histórico físico.
                 </div>
 
-                <button type="submit" className="botao-primario" style={{ width: '100%', marginTop: '0.5rem', padding: '1rem' }}>
-                  <IconeCheck tamanho={20} />
+                <button type="submit" className="botao-primario" style={{ width: '100%', marginTop: '0.4rem', padding: '0.55rem 1rem', fontSize: '0.85rem' }}>
+                  <IconeCheck tamanho={16} />
                   <span>Concluir Anamnese e Entrar no Shara-EF</span>
                 </button>
 
-                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.4rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.35rem' }}>
                   <BotaoInstalarApp variante="secundario" texto="📱 Instalar App no Telefone" estilo={{ width: '100%' }} />
                 </div>
               </form>
@@ -663,19 +663,19 @@ export const TelaNovoAluno: React.FC<PropriedadesTelaNovoAluno> = ({ aoConcluirC
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
-                  marginTop: '2rem',
-                  paddingTop: '1.2rem',
+                  marginTop: '1.25rem',
+                  paddingTop: '0.75rem',
                   borderTop: '1px solid #28325c'
                 }}
               >
                 <button type="button" className="botao-secundario" onClick={voltarEtapa}>
-                  <IconeVoltar tamanho={18} />
+                  <IconeVoltar tamanho={15} />
                   <span>{etapaAtual === 1 ? 'Cancelar' : 'Voltar'}</span>
                 </button>
 
                 <button type="button" className="botao-primario" onClick={avancarEtapa}>
                   <span>Próximo Passo</span>
-                  <IconeAvancar tamanho={18} />
+                  <IconeAvancar tamanho={15} />
                 </button>
               </div>
             )}

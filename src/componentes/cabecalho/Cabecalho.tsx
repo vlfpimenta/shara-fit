@@ -42,7 +42,7 @@ export const Cabecalho: React.FC<PropriedadesCabecalho> = ({
         {/* Logotipo e Nome Shara.ef */}
         <div className="marca-container" onClick={aoNavegarInicio} title="Ir para o Início">
           <div className="marca-icone-svg">
-            <IconeHaltere tamanho={22} cor="#ffffff" />
+            <IconeHaltere tamanho={17} cor="#ffffff" />
           </div>
           <div>
             <div className="marca-texto">
@@ -55,27 +55,27 @@ export const Cabecalho: React.FC<PropriedadesCabecalho> = ({
         {/* Ações à Direita */}
         <div className="acoes-cabecalho">
           {usuario ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
               <div
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.4rem',
+                  gap: '0.35rem',
                   background: 'rgba(28, 35, 68, 0.6)',
-                  padding: '0.4rem 0.8rem',
+                  padding: '0.25rem 0.55rem',
                   borderRadius: '9999px',
                   border: '1px solid #28325c',
-                  fontSize: '0.85rem'
+                  fontSize: '0.78rem'
                 }}
               >
-                <IconeUsuario tamanho={16} cor={usuario.papel === 'professor' ? '#ff2e7e' : '#38bdf8'} />
+                <IconeUsuario tamanho={14} cor={usuario.papel === 'professor' ? '#ff2e7e' : '#38bdf8'} />
                 <span style={{ fontWeight: 600 }}>{usuario.nome.split(' ')[0]}</span>
                 <span
                   style={{
-                    fontSize: '0.7rem',
+                    fontSize: '0.65rem',
                     background: usuario.papel === 'professor' ? 'rgba(255, 46, 126, 0.2)' : 'rgba(56, 189, 248, 0.2)',
                     color: usuario.papel === 'professor' ? '#ff2e7e' : '#38bdf8',
-                    padding: '0.1rem 0.4rem',
+                    padding: '0.08rem 0.35rem',
                     borderRadius: '4px',
                     textTransform: 'uppercase'
                   }}
@@ -85,18 +85,18 @@ export const Cabecalho: React.FC<PropriedadesCabecalho> = ({
               </div>
 
               <button className="botao-sair" onClick={aoEncerrarSessao} title="Sair da Conta">
-                <IconeSair tamanho={16} />
+                <IconeSair tamanho={14} />
                 <span>Sair</span>
               </button>
             </div>
           ) : (
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', gap: '0.4rem' }}>
               <button
                 className="botao-secundario"
                 onClick={aoAbrirLoginAluno}
-                style={{ padding: '0.45rem 0.85rem', fontSize: '0.85rem', borderRadius: '9999px' }}
+                style={{ padding: '0.32rem 0.65rem', fontSize: '0.78rem', borderRadius: '9999px' }}
               >
-                <IconeUsuario tamanho={16} />
+                <IconeUsuario tamanho={14} />
                 <span>Acesso Aluno</span>
               </button>
 
@@ -107,7 +107,7 @@ export const Cabecalho: React.FC<PropriedadesCabecalho> = ({
                 title="Área restrita da Professora Sara"
               >
                 <span>Professora</span>
-                <IconeChave tamanho={16} />
+                <IconeChave tamanho={14} />
               </button>
             </div>
           )}

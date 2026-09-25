@@ -85,6 +85,7 @@ shara-fit/
 - [x] Ocultação dos textos e links de rodapé na área do aluno, oferecendo visual limpo e imersivo de aplicativo nativo.
 - [x] Otimização da interface mobile no painel da professora: substituição da tabela espremida por cartões individuais (`.card-aluno-mobile`), redução e proporcionalidade dos badges (`.badge`) e introdução da classe `.tag-objetivo` com texto formatado naturalmente sem caixa alta forçada.
 - [x] Sincronização remota automática com a VPS: implementação do endpoint `GET /api/alunos` no Fastify com normalização de campos da anamnese, integração de `sincronizarAlunosRemoto()` no frontend ao inicializar o painel, botão "🔄 Sincronizar" no cabeçalho e persistência de token JWT.
+- [x] Ajuste completo de escala dos elementos visuais no mobile inspirado no padrão MiniBOM: normalização da meta tag `viewport` sem restrições (`width=device-width, initial-scale=1.0`), definição de escala tipográfica base compacta (`html { font-size: 14px }` no mobile), redução proporcional de alturas de botões (36px/38px), cabeçalho compacto (50px), cards com padding reduzido (0.85rem), inputs e modais alinhados à ergonomia de smartphones.
 
 ## 5. Diretriz Obrigatória de Versionamento e Deploy Contínuo (CI/CD)
 

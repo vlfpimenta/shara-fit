@@ -76,7 +76,7 @@ export const PainelAluno: React.FC<PropriedadesPainelAluno> = ({ aluno, aoAtuali
   const progresso = calcularProgressoDivisao();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', paddingBottom: '4rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', paddingBottom: '3.5rem' }}>
       {/* Barra de Boas-vindas e Abas */}
       <div
         style={{
@@ -84,40 +84,40 @@ export const PainelAluno: React.FC<PropriedadesPainelAluno> = ({ aluno, aoAtuali
           flexWrap: 'wrap',
           justifyContent: 'space-between',
           alignItems: 'center',
-          gap: '1rem',
+          gap: '0.75rem',
           borderBottom: '1px solid #28325c',
-          paddingBottom: '1rem'
+          paddingBottom: '0.75rem'
         }}
       >
         <div>
-          <span style={{ fontSize: '0.8rem', color: '#ff2e7e', fontWeight: 700, textTransform: 'uppercase' }}>
+          <span style={{ fontSize: '0.72rem', color: '#ff2e7e', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.4px' }}>
             Área do Aluno
           </span>
-          <h2 style={{ fontSize: '1.6rem', color: '#ffffff' }}>Olá, {aluno.nome.split(' ')[0]}! 👋</h2>
-          <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>
-            Objetivo: <strong>{aluno.anamnese.objetivoPrincipal}</strong>
+          <h2 style={{ fontSize: '1.25rem', color: '#ffffff', fontWeight: 800 }}>Olá, {aluno.nome.split(' ')[0]}! 👋</h2>
+          <p style={{ color: '#94a3b8', fontSize: '0.78rem' }}>
+            Objetivo: <strong style={{ color: '#ff80aa' }}>{aluno.anamnese.objetivoPrincipal}</strong>
           </p>
         </div>
 
         {/* Alternador de visualização Treino / Anamnese */}
-        <div style={{ display: 'flex', background: '#141930', borderRadius: '10px', padding: '4px', border: '1px solid #28325c' }}>
+        <div style={{ display: 'flex', background: '#141930', borderRadius: '10px', padding: '3px', border: '1px solid #28325c' }}>
           <button
             onClick={() => setAbaInterna('treino')}
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '0.4rem',
-              padding: '0.55rem 1rem',
-              borderRadius: '8px',
+              gap: '0.35rem',
+              padding: '0.4rem 0.75rem',
+              borderRadius: '7px',
               border: 'none',
               background: abaInterna === 'treino' ? 'var(--gradiente-primario)' : 'transparent',
               color: '#ffffff',
               fontWeight: 600,
-              fontSize: '0.85rem',
+              fontSize: '0.78rem',
               cursor: 'pointer'
             }}
           >
-            <IconeHaltere tamanho={16} />
+            <IconeHaltere tamanho={14} />
             <span>Ficha de Treino</span>
           </button>
           <button
@@ -125,18 +125,18 @@ export const PainelAluno: React.FC<PropriedadesPainelAluno> = ({ aluno, aoAtuali
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '0.4rem',
-              padding: '0.55rem 1rem',
-              borderRadius: '8px',
+              gap: '0.35rem',
+              padding: '0.4rem 0.75rem',
+              borderRadius: '7px',
               border: 'none',
               background: abaInterna === 'anamnese' ? 'rgba(56, 189, 248, 0.2)' : 'transparent',
               color: abaInterna === 'anamnese' ? '#38bdf8' : '#94a3b8',
               fontWeight: 600,
-              fontSize: '0.85rem',
+              fontSize: '0.78rem',
               cursor: 'pointer'
             }}
           >
-            <IconeInformacao tamanho={16} />
+            <IconeInformacao tamanho={14} />
             <span>Minha Anamnese</span>
           </button>
         </div>
@@ -145,9 +145,9 @@ export const PainelAluno: React.FC<PropriedadesPainelAluno> = ({ aluno, aoAtuali
       {abaInterna === 'treino' ? (
         <>
           {ficha && ficha.divisoes.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
               {/* Barra de Seleção de Divisão (Treino A, Treino B, Treino C) */}
-              <div style={{ display: 'flex', gap: '0.6rem', overflowX: 'auto', paddingBottom: '0.4rem' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.3rem' }}>
                 {ficha.divisoes.map((div) => {
                   const ativa = div.id === (divisaoAtual?.id || '');
                   return (
@@ -155,15 +155,15 @@ export const PainelAluno: React.FC<PropriedadesPainelAluno> = ({ aluno, aoAtuali
                       key={div.id}
                       onClick={() => setDivisaoAtivaId(div.id)}
                       style={{
-                        padding: '0.65rem 1.2rem',
-                        borderRadius: '12px',
+                        padding: '0.45rem 0.85rem',
+                        borderRadius: '10px',
                         border: ativa ? '1px solid #ff2e7e' : '1px solid #28325c',
                         background: ativa ? 'rgba(255, 46, 126, 0.15)' : '#141930',
                         color: ativa ? '#ffffff' : '#94a3b8',
                         cursor: 'pointer',
                         whiteSpace: 'nowrap',
                         fontWeight: 700,
-                        fontSize: '0.9rem',
+                        fontSize: '0.82rem',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'flex-start',
@@ -171,7 +171,7 @@ export const PainelAluno: React.FC<PropriedadesPainelAluno> = ({ aluno, aoAtuali
                         transition: 'all 0.2s ease'
                       }}
                     >
-                      <span style={{ color: ativa ? '#ff2e7e' : '#64748b', fontSize: '0.75rem', textTransform: 'uppercase' }}>
+                      <span style={{ color: ativa ? '#ff2e7e' : '#64748b', fontSize: '0.68rem', textTransform: 'uppercase' }}>
                         {div.identificador}
                       </span>
                       <span>{div.titulo}</span>
@@ -182,28 +182,28 @@ export const PainelAluno: React.FC<PropriedadesPainelAluno> = ({ aluno, aoAtuali
 
               {/* Informações da Divisão Atual e Barra de Progresso */}
               {divisaoAtual && (
-                <div className="cartao" style={{ padding: '1.2rem 1.5rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
+                <div className="cartao" style={{ padding: '0.85rem 1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
                     <div>
-                      <h3 style={{ fontSize: '1.3rem', color: '#ffffff' }}>{divisaoAtual.titulo}</h3>
+                      <h3 style={{ fontSize: '1.05rem', color: '#ffffff', fontWeight: 700 }}>{divisaoAtual.titulo}</h3>
                       {divisaoAtual.frequenciaSugerida && (
-                        <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>
+                        <p style={{ color: '#94a3b8', fontSize: '0.78rem' }}>
                           Frequência sugerida: {divisaoAtual.frequenciaSugerida}
                         </p>
                       )}
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#ff2e7e' }}>
+                      <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#ff2e7e' }}>
                         {progresso.porcentagem}%
                       </span>
-                      <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                      <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
                         {progresso.concluidas}/{progresso.total} séries
                       </div>
                     </div>
                   </div>
 
                   {/* Barra visual de progresso */}
-                  <div style={{ width: '100%', height: '8px', background: '#0c0f1d', borderRadius: '9999px', overflow: 'hidden' }}>
+                  <div style={{ width: '100%', height: '6px', background: '#0c0f1d', borderRadius: '9999px', overflow: 'hidden' }}>
                     <div
                       style={{
                         width: `${progresso.porcentagem}%`,
@@ -217,30 +217,30 @@ export const PainelAluno: React.FC<PropriedadesPainelAluno> = ({ aluno, aoAtuali
               )}
 
               {/* Lista de Exercícios (Estilo mFit) */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {divisaoAtual?.exercicios.map((ex, indexEx) => (
                   <div
                     key={ex.id}
                     className="cartao"
                     style={{
-                      padding: '1.2rem',
+                      padding: '0.85rem 0.95rem',
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: '0.9rem',
-                      borderLeft: '4px solid #ff2e7e'
+                      gap: '0.65rem',
+                      borderLeft: '3px solid #ff2e7e'
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.2rem' }}>
                           <span
                             style={{
                               background: '#28325c',
                               color: '#ffffff',
-                              fontSize: '0.75rem',
+                              fontSize: '0.7rem',
                               fontWeight: 800,
-                              width: '22px',
-                              height: '22px',
+                              width: '20px',
+                              height: '20px',
                               borderRadius: '50%',
                               display: 'inline-flex',
                               alignItems: 'center',
@@ -251,12 +251,12 @@ export const PainelAluno: React.FC<PropriedadesPainelAluno> = ({ aluno, aoAtuali
                           </span>
                           <span className="badge badge-ciano">{ex.grupamento}</span>
                         </div>
-                        <h4 style={{ fontSize: '1.15rem', color: '#ffffff' }}>{ex.nome}</h4>
+                        <h4 style={{ fontSize: '0.98rem', color: '#ffffff', fontWeight: 700 }}>{ex.nome}</h4>
                       </div>
 
                       <div style={{ textAlign: 'right' }}>
-                        <span className="badge badge-primaria" style={{ fontSize: '0.8rem' }}>
-                          <IconeCronometro tamanho={14} /> {ex.intervaloSegundos}s descanso
+                        <span className="badge badge-primaria" style={{ fontSize: '0.68rem' }}>
+                          <IconeCronometro tamanho={12} /> {ex.intervaloSegundos}s descanso
                         </span>
                       </div>
                     </div>
@@ -264,10 +264,10 @@ export const PainelAluno: React.FC<PropriedadesPainelAluno> = ({ aluno, aoAtuali
                     {ex.observacoes && (
                       <p
                         style={{
-                          fontSize: '0.85rem',
+                          fontSize: '0.78rem',
                           color: '#cbd5e1',
                           background: 'rgba(255,255,255,0.04)',
-                          padding: '0.5rem 0.8rem',
+                          padding: '0.4rem 0.65rem',
                           borderRadius: '8px',
                           border: '1px dashed #28325c'
                         }}
@@ -278,13 +278,13 @@ export const PainelAluno: React.FC<PropriedadesPainelAluno> = ({ aluno, aoAtuali
 
                     {/* Tabela de Séries e Checkboxes (mFit Style) */}
                     <div style={{ overflowX: 'auto' }}>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.88rem' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.8rem' }}>
                         <thead>
                           <tr style={{ color: '#64748b', borderBottom: '1px solid #28325c' }}>
-                            <th style={{ padding: '0.4rem 0.5rem' }}>Série</th>
-                            <th style={{ padding: '0.4rem 0.5rem' }}>Repetições</th>
-                            <th style={{ padding: '0.4rem 0.5rem' }}>Carga (kg)</th>
-                            <th style={{ padding: '0.4rem 0.5rem', textAlign: 'center' }}>Concluir</th>
+                            <th style={{ padding: '0.35rem 0.45rem' }}>Série</th>
+                            <th style={{ padding: '0.35rem 0.45rem' }}>Repetições</th>
+                            <th style={{ padding: '0.35rem 0.45rem' }}>Carga (kg)</th>
+                            <th style={{ padding: '0.35rem 0.45rem', textAlign: 'center' }}>Concluir</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -301,34 +301,34 @@ export const PainelAluno: React.FC<PropriedadesPainelAluno> = ({ aluno, aoAtuali
                                   transition: 'background 0.2s ease'
                                 }}
                               >
-                                <td style={{ padding: '0.6rem 0.5rem', fontWeight: 700, color: '#ffffff' }}>
+                                <td style={{ padding: '0.45rem 0.45rem', fontWeight: 700, color: '#ffffff' }}>
                                   #{iSerie + 1}
                                 </td>
-                                <td style={{ padding: '0.6rem 0.5rem', color: '#94a3b8' }}>{ex.repeticoes}</td>
-                                <td style={{ padding: '0.6rem 0.5rem' }}>
+                                <td style={{ padding: '0.45rem 0.45rem', color: '#94a3b8' }}>{ex.repeticoes}</td>
+                                <td style={{ padding: '0.45rem 0.45rem' }}>
                                   <input
                                     type="text"
                                     value={cargaGravada}
                                     placeholder="Ex: 20"
                                     onChange={(e) => atualizarCarga(ex.id, iSerie, e.target.value)}
                                     style={{
-                                      width: '65px',
+                                      width: '56px',
                                       background: '#0c0f1d',
                                       border: '1px solid #28325c',
                                       color: '#ffffff',
-                                      padding: '0.3rem 0.5rem',
+                                      padding: '0.22rem 0.4rem',
                                       borderRadius: '6px',
-                                      fontSize: '0.85rem'
+                                      fontSize: '0.78rem'
                                     }}
                                   />
                                 </td>
-                                <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center' }}>
+                                <td style={{ padding: '0.45rem 0.45rem', textAlign: 'center' }}>
                                   <button
                                     onClick={() => alternarSerie(ex.id, iSerie, serieFeita, ex.intervaloSegundos)}
                                     style={{
-                                      width: '34px',
-                                      height: '34px',
-                                      borderRadius: '8px',
+                                      width: '30px',
+                                      height: '30px',
+                                      borderRadius: '7px',
                                       border: serieFeita ? 'none' : '2px solid #38bdf8',
                                       background: serieFeita ? '#10b981' : 'transparent',
                                       color: '#ffffff',
@@ -340,7 +340,7 @@ export const PainelAluno: React.FC<PropriedadesPainelAluno> = ({ aluno, aoAtuali
                                     }}
                                     title={serieFeita ? 'Desmarcar' : 'Concluir série e iniciar descanso'}
                                   >
-                                    {serieFeita ? <IconeCheck tamanho={20} /> : <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#38bdf8' }} />}
+                                    {serieFeita ? <IconeCheck tamanho={16} /> : <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#38bdf8' }} />}
                                   </button>
                                 </td>
                               </tr>
@@ -355,33 +355,33 @@ export const PainelAluno: React.FC<PropriedadesPainelAluno> = ({ aluno, aoAtuali
             </div>
           ) : (
             /* Aluno cadastrado, mas sem treino prescrito ainda */
-            <div className="cartao" style={{ textAlign: 'center', padding: '3rem 1.5rem' }}>
+            <div className="cartao" style={{ textAlign: 'center', padding: '1.8rem 1rem' }}>
               <div
                 style={{
-                  width: '60px',
-                  height: '60px',
+                  width: '46px',
+                  height: '46px',
                   borderRadius: '50%',
                   background: 'rgba(245, 158, 11, 0.15)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  margin: '0 auto 1rem auto'
+                  margin: '0 auto 0.75rem auto'
                 }}
               >
-                <IconeCronometro tamanho={30} cor="#f59e0b" />
+                <IconeCronometro tamanho={22} cor="#f59e0b" />
               </div>
-              <h3 style={{ fontSize: '1.35rem', color: '#ffffff', marginBottom: '0.5rem' }}>
+              <h3 style={{ fontSize: '1.1rem', color: '#ffffff', marginBottom: '0.4rem', fontWeight: 700 }}>
                 Ficha em Fase de Prescrição!
               </h3>
-              <p style={{ color: '#94a3b8', maxWidth: '480px', margin: '0 auto 1.5rem auto', lineHeight: 1.6 }}>
+              <p style={{ color: '#94a3b8', fontSize: '0.82rem', maxWidth: '440px', margin: '0 auto 1rem auto', lineHeight: 1.5 }}>
                 A professora <strong>Sara</strong> recebeu suas respostas de anamnese e está preparando sua ficha de treinos personalizada.
                 Em breve suas divisões e exercícios aparecerão aqui!
               </p>
-              <div style={{ display: 'inline-flex', gap: '0.8rem' }}>
+              <div style={{ display: 'inline-flex', gap: '0.6rem' }}>
                 <button
                   className="botao-secundario"
                   onClick={() => setAbaInterna('anamnese')}
-                  style={{ fontSize: '0.9rem' }}
+                  style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}
                 >
                   Revisar Minha Anamnese
                 </button>
@@ -391,39 +391,39 @@ export const PainelAluno: React.FC<PropriedadesPainelAluno> = ({ aluno, aoAtuali
         </>
       ) : (
         /* Visualização da Anamnese Preenchida */
-        <div className="cartao" style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-          <div style={{ borderBottom: '1px solid #28325c', paddingBottom: '0.8rem' }}>
-            <h3 style={{ fontSize: '1.25rem', color: '#ffffff' }}>Histórico da sua Anamnese</h3>
-            <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>
+        <div className="cartao" style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+          <div style={{ borderBottom: '1px solid #28325c', paddingBottom: '0.6rem' }}>
+            <h3 style={{ fontSize: '1.05rem', color: '#ffffff', fontWeight: 700 }}>Histórico da sua Anamnese</h3>
+            <p style={{ color: '#94a3b8', fontSize: '0.78rem' }}>
               Dados preenchidos em: {aluno.anamnese.dataPreenchimento || aluno.dataCadastro}
             </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
             <div>
-              <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Contato:</span>
-              <p style={{ fontWeight: 600 }}>{aluno.anamnese.contato}</p>
+              <span style={{ fontSize: '0.7rem', color: '#64748b' }}>Contato:</span>
+              <p style={{ fontWeight: 600, fontSize: '0.82rem' }}>{aluno.anamnese.contato}</p>
             </div>
             <div>
-              <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Idade / Peso / Altura:</span>
-              <p style={{ fontWeight: 600 }}>
+              <span style={{ fontSize: '0.7rem', color: '#64748b' }}>Idade / Peso / Altura:</span>
+              <p style={{ fontWeight: 600, fontSize: '0.82rem' }}>
                 {aluno.anamnese.idade} anos • {aluno.anamnese.peso} kg • {aluno.anamnese.altura} cm
               </p>
             </div>
             <div>
-              <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Objetivo:</span>
-              <p style={{ fontWeight: 600, color: '#ff2e7e' }}>{aluno.anamnese.objetivoPrincipal}</p>
+              <span style={{ fontSize: '0.7rem', color: '#64748b' }}>Objetivo:</span>
+              <p style={{ fontWeight: 600, fontSize: '0.82rem', color: '#ff2e7e' }}>{aluno.anamnese.objetivoPrincipal}</p>
             </div>
             <div>
-              <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Local de Treino:</span>
-              <p style={{ fontWeight: 600 }}>{aluno.anamnese.localTreino}</p>
+              <span style={{ fontSize: '0.7rem', color: '#64748b' }}>Local de Treino:</span>
+              <p style={{ fontWeight: 600, fontSize: '0.82rem' }}>{aluno.anamnese.localTreino}</p>
             </div>
           </div>
 
-          <div style={{ borderTop: '1px solid #1c2344', paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+          <div style={{ borderTop: '1px solid #1c2344', paddingTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
             <div>
-              <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Restrições Médicas / Lesões:</span>
-              <p style={{ fontSize: '0.9rem', color: '#e2e8f0' }}>
+              <span style={{ fontSize: '0.7rem', color: '#64748b' }}>Restrições Médicas / Lesões:</span>
+              <p style={{ fontSize: '0.82rem', color: '#e2e8f0' }}>
                 Restrição médica: <strong>{aluno.anamnese.possuiRestricaoMedica}</strong>{' '}
                 {aluno.anamnese.descricaoRestricaoMedica && `(${aluno.anamnese.descricaoRestricaoMedica})`}
                 <br />
@@ -433,16 +433,16 @@ export const PainelAluno: React.FC<PropriedadesPainelAluno> = ({ aluno, aoAtuali
             </div>
 
             <div>
-              <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Disponibilidade de Dias:</span>
-              <p style={{ fontSize: '0.9rem', color: '#38bdf8' }}>
+              <span style={{ fontSize: '0.7rem', color: '#64748b' }}>Disponibilidade de Dias:</span>
+              <p style={{ fontSize: '0.82rem', color: '#38bdf8' }}>
                 {aluno.anamnese.disponibilidadeTreino?.join(', ') || 'Não especificado'}
               </p>
             </div>
 
             {aluno.anamnese.informacoesRelevantes && (
               <div>
-                <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Observações adicionais informadas:</span>
-                <p style={{ fontSize: '0.9rem', color: '#cbd5e1', fontStyle: 'italic' }}>
+                <span style={{ fontSize: '0.7rem', color: '#64748b' }}>Observações adicionais informadas:</span>
+                <p style={{ fontSize: '0.82rem', color: '#cbd5e1', fontStyle: 'italic' }}>
                   "{aluno.anamnese.informacoesRelevantes}"
                 </p>
               </div>
