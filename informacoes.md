@@ -80,6 +80,7 @@ shara-fit/
 - [x] Redução e enxugamento de textos longos e prolixos na apresentação e anamnese.
 - [x] Gerenciamento completo de alunos na área da professora: editar cadastro, desativar/reativar acesso e excluir aluno com confirmação segura.
 - [x] Barra de status de tempo fixa no rodapé para mobile, com espaçamento adequado garantindo rolagem livre do rodapé e textos acima da barra.
+- [x] Integração natural das imagens da professora Sara na landing page: retrato vertical (`shara-vert.png`) no Hero principal com badge de status e banner panorâmico (`shara-hor.png`) destacando a metodologia em qualquer ambiente de treino.
 
 ## 5. Diretriz Obrigatória de Versionamento e Deploy Contínuo (CI/CD)
 
