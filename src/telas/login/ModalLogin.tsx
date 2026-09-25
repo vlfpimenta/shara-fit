@@ -33,13 +33,13 @@ export const ModalLogin: React.FC<PropriedadesModalLogin> = ({
     setSenha('');
   };
 
-  const executarLogin = (e: React.FormEvent) => {
+  const executarLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErro('');
     setCarregando(true);
 
-    setTimeout(() => {
-      const resultado = ServicoArmazenamento.autenticar(email, senha);
+    try {
+      const resultado = await ServicoArmazenamento.autenticar(email, senha);
       setCarregando(false);
 
       if (!resultado.sucesso || !resultado.usuario) {
@@ -48,7 +48,10 @@ export const ModalLogin: React.FC<PropriedadesModalLogin> = ({
 
       aoSucessoLogin(resultado.usuario);
       aoFechar();
-    }, 300);
+    } catch {
+      setCarregando(false);
+      setErro('Erro inesperado ao realizar login.');
+    }
   };
 
   return (

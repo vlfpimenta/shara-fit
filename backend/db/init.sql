@@ -89,7 +89,7 @@ VALUES (
     'professor',
     'Sara',
     'sara@sharaef.com.br',
-    '$2a$10$vI8aWBnW3fID.ZQ4/ZO8s.Y0i2d9eKjK0u9uW6k1/6iKqT.Y1Vq2W',
+    '$2a$10$uA.osiT.X1bf5wp3/Z5M3.8KZb1uu6DwH0M6Y/Px9/ISQInXSVdzm',
     '012345-G/SP',
     'ativo'
 ) ON CONFLICT (email) DO NOTHING;

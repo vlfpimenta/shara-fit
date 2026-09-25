@@ -115,7 +115,7 @@ export const TelaNovoAluno: React.FC<PropriedadesTelaNovoAluno> = ({ aoConcluirC
   };
 
   // Finalização do cadastro
-  const finalizarCadastro = (e: React.FormEvent) => {
+  const finalizarCadastro = async (e: React.FormEvent) => {
     e.preventDefault();
     setErroValidacao('');
 
@@ -129,7 +129,7 @@ export const TelaNovoAluno: React.FC<PropriedadesTelaNovoAluno> = ({ aoConcluirC
       return setErroValidacao('As senhas digitadas não coincidem.');
     }
 
-    const resultado = ServicoArmazenamento.cadastrarNovoAluno(formulario, email, senha);
+    const resultado = await ServicoArmazenamento.cadastrarNovoAluno(formulario, email, senha);
 
     if (!resultado.sucesso || !resultado.aluno) {
       return setErroValidacao(resultado.mensagem);

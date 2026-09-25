@@ -31,6 +31,26 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
   const [filtroGrupamento, setFiltroGrupamento] = useState<string>('Todos');
   const [buscaExercicio, setBuscaExercicio] = useState<string>('');
 
+  // Configuração do Domínio da VPS
+  const [modalConfigApiAberta, setModalConfigApiAberta] = useState<boolean>(false);
+  const [urlApiInput, setUrlApiInput] = useState<string>(() => ServicoArmazenamento.obterUrlApi());
+  const [resultadoTesteApi, setResultadoTesteApi] = useState<{ sucesso: boolean; mensagem: string; detalhe?: string } | null>(null);
+  const [testandoApi, setTestandoApi] = useState<boolean>(false);
+
+  const testarConexao = async () => {
+    setTestandoApi(true);
+    setResultadoTesteApi(null);
+    const res = await ServicoArmazenamento.testarConexaoApi(urlApiInput);
+    setResultadoTesteApi(res);
+    setTestandoApi(false);
+  };
+
+  const salvarNovoDominio = () => {
+    ServicoArmazenamento.definirUrlApi(urlApiInput);
+    alert('Domínio da API salvo com sucesso!');
+    setModalConfigApiAberta(false);
+  };
+
   // Filtragem de alunos
   const alunosFiltrados = alunos.filter(
     (a) =>
@@ -141,7 +161,21 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
             <span className="badge badge-primaria">Área Administrativa</span>
             <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Professora Sara</span>
           </div>
-          <h1 style={{ fontSize: '1.8rem', color: '#ffffff' }}>Painel de Gestão dos Alunos</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginTop: '0.3rem', flexWrap: 'wrap' }}>
+            <h1 style={{ fontSize: '1.8rem', color: '#ffffff' }}>Painel de Gestão dos Alunos</h1>
+            <button
+              className="botao-secundario"
+              onClick={() => {
+                setUrlApiInput(ServicoArmazenamento.obterUrlApi());
+                setResultadoTesteApi(null);
+                setModalConfigApiAberta(true);
+              }}
+              style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', borderRadius: '8px' }}
+              title="Configurar domínio da VPS / API"
+            >
+              ⚙️ Configurar VPS / Domínio
+            </button>
+          </div>
         </div>
 
         {/* Resumo Rápido */}
@@ -766,6 +800,98 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
                   </span>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal de Configuração do Domínio da API / VPS */}
+      {modalConfigApiAberta && (
+        <div className="overlay-modal" onClick={() => setModalConfigApiAberta(false)}>
+          <div className="conteudo-modal" style={{ maxWidth: '560px' }} onClick={(e) => e.stopPropagation()}>
+            <div className="cabecalho-modal">
+              <div>
+                <span className="badge badge-ciano">Infraestrutura VPS</span>
+                <h3 className="titulo-modal" style={{ marginTop: '0.2rem' }}>
+                  Configuração de Conexão da API
+                </h3>
+              </div>
+              <button
+                onClick={() => setModalConfigApiAberta(false)}
+                style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
+              >
+                <IconeFechar tamanho={20} />
+              </button>
+            </div>
+
+            <p style={{ color: '#94a3b8', fontSize: '0.88rem', marginBottom: '1.2rem', lineHeight: 1.6 }}>
+              O banco de dados e a API estão hospedados na sua VPS em container Docker. Você pode alterar o domínio a qualquer momento abaixo:
+            </p>
+
+            <div className="grupo-campo">
+              <label className="rotulo-campo">Endereço da API (Domínio / Host)</label>
+              <input
+                type="text"
+                className="campo-texto"
+                value={urlApiInput}
+                placeholder="https://matrix.vlfp.com.br"
+                onChange={(e) => {
+                  setUrlApiInput(e.target.value);
+                  setResultadoTesteApi(null);
+                }}
+              />
+              <span style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '0.3rem' }}>
+                Domínio atual configurado: <code>{ServicoArmazenamento.obterUrlApi()}</code>
+              </span>
+            </div>
+
+            {resultadoTesteApi && (
+              <div
+                style={{
+                  background: resultadoTesteApi.sucesso ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                  border: resultadoTesteApi.sucesso ? '1px solid #10b981' : '1px solid #ef4444',
+                  color: resultadoTesteApi.sucesso ? '#6ee7b7' : '#fca5a5',
+                  padding: '0.8rem 1rem',
+                  borderRadius: '10px',
+                  fontSize: '0.88rem',
+                  marginBottom: '1rem'
+                }}
+              >
+                <strong>{resultadoTesteApi.sucesso ? '✅ Sucesso:' : '❌ Erro:'}</strong> {resultadoTesteApi.mensagem}
+                {resultadoTesteApi.detalhe && (
+                  <div style={{ fontSize: '0.8rem', opacity: 0.85, marginTop: '0.3rem' }}>
+                    Detalhe: {resultadoTesteApi.detalhe}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', gap: '0.8rem', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className="botao-secundario"
+                disabled={testandoApi}
+                onClick={testarConexao}
+                style={{ fontSize: '0.85rem' }}
+              >
+                {testandoApi ? 'Testando Conexão...' : '🔍 Testar Conexão Agora'}
+              </button>
+
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  type="button"
+                  className="botao-secundario"
+                  onClick={() => setModalConfigApiAberta(false)}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="botao-primario"
+                  onClick={salvarNovoDominio}
+                >
+                  Salvar Domínio
+                </button>
+              </div>
             </div>
           </div>
         </div>

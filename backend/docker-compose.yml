@@ -3,19 +3,19 @@ version: '3.8'
 services:
   shara_db:
     image: postgres:16-alpine
-    container_name: shara_banco_postgres
+    container_name: shara_postgres_banco
     restart: always
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-shara_ef_db}
-      POSTGRES_USER: ${POSTGRES_USER:-sara_admin}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-senha_segura_vps_2026}
+      POSTGRES_DB: shara_ef_db
+      POSTGRES_USER: sara_admin
+      POSTGRES_PASSWORD: ${DB_SENHA:-sara_segura_vps_2026}
     volumes:
-      - dados_postgres:/var/lib/postgresql/data
+      - shara_postgres_dados:/var/lib/postgresql/data
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    ports:
-      - "127.0.0.1:5432:5432"
+    networks:
+      - shara_rede_interna
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sara_admin} -d ${POSTGRES_DB:-shara_ef_db}"]
+      test: ["CMD-SHELL", "pg_isready -U sara_admin -d shara_ef_db"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -29,15 +29,22 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3001
-      DATABASE_URL: postgresql://${POSTGRES_USER:-sara_admin}:${POSTGRES_PASSWORD:-senha_segura_vps_2026}@shara_db:5432/${POSTGRES_DB:-shara_ef_db}
-      JWT_SECRET: ${JWT_SECRET:-chave_secreta_shara_ef_jwt_2026}
-      ORIGEM_PERMITIDA: ${ORIGEM_PERMITIDA:-https://shara-fit.vercel.app}
-    ports:
-      - "3001:3001"
+      DATABASE_URL: postgresql://sara_admin:${DB_SENHA:-sara_segura_vps_2026}@shara_db:5432/shara_ef_db
+      JWT_SECRET: ${JWT_SECRET:-chave_jwt_shara_ef_producao_2026}
+      ORIGEM_PERMITIDA: "*"
+    networks:
+      - shara_rede_interna
+      - nginx-proxy_default
     depends_on:
       shara_db:
         condition: service_healthy
 
+networks:
+  shara_rede_interna:
+    driver: bridge
+  nginx-proxy_default:
+    external: true
+
 volumes:
-  dados_postgres:
-    name: shara_ef_dados_postgres
+  shara_postgres_dados:
+    name: shara_postgres_dados
