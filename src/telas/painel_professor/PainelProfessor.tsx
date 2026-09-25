@@ -12,6 +12,7 @@ import {
   IconeOlho
 } from '../../componentes/icones';
 import { ServicoArmazenamento } from '../../servicos/armazenamento';
+import { BotaoInstalarApp } from '../../componentes/pwa/BotaoInstalarApp';
 import { DivisaoTreino, ExercicioBiblioteca, ExercicioTreino, UsuarioAluno } from '../../tipos';
 
 interface PropriedadesPainelProfessor {
@@ -239,6 +240,11 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
             >
               ⚙️ Configurar VPS / Domínio
             </button>
+            <BotaoInstalarApp
+              variante="secundario"
+              texto="📱 Instalar App no Telefone"
+              estilo={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', borderRadius: '8px' }}
+            />
           </div>
         </div>
 

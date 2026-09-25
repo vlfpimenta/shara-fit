@@ -152,4 +152,20 @@ export const IconeDesbloquear: React.FC<PropriedadesIcone> = ({ tamanho = 24, co
   </svg>
 );
 
+export const IconeCelular: React.FC<PropriedadesIcone> = ({ tamanho = 24, cor = 'currentColor', classe = '' }) => (
+  <svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none" stroke={cor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={classe}>
+    <rect width="14" height="20" x="5" y="2" rx="2" ry="2" />
+    <path d="M12 18h.01" />
+  </svg>
+);
+
+export const IconeDownload: React.FC<PropriedadesIcone> = ({ tamanho = 24, cor = 'currentColor', classe = '' }) => (
+  <svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none" stroke={cor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={classe}>
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="7 10 12 15 17 10" />
+    <line x1="12" x2="12" y1="15" y2="3" />
+  </svg>
+);
+
+
 

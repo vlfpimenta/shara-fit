@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { IconeAvancar, IconeCheck, IconeVoltar } from '../../componentes/icones';
+import { BotaoInstalarApp } from '../../componentes/pwa/BotaoInstalarApp';
 import { ServicoArmazenamento } from '../../servicos/armazenamento';
 import { RespostasAnamnese, UsuarioAluno } from '../../tipos';
 
@@ -214,9 +215,12 @@ export const TelaNovoAluno: React.FC<PropriedadesTelaNovoAluno> = ({ aoConcluirC
               <IconeCheck tamanho={36} cor="#10b981" />
             </div>
             <h3 style={{ fontSize: '1.5rem', color: '#ffffff', marginBottom: '0.5rem' }}>Cadastro Realizado com Sucesso!</h3>
-            <p style={{ color: '#94a3b8' }}>
+            <p style={{ color: '#94a3b8', marginBottom: '1.5rem' }}>
               Seus dados foram salvos. Redirecionando para a sua área de aluno no Shara-EF...
             </p>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <BotaoInstalarApp variante="destaque" texto="📱 Instalar App no Telefone" />
+            </div>
           </div>
         ) : (
           <div>
@@ -646,6 +650,10 @@ export const TelaNovoAluno: React.FC<PropriedadesTelaNovoAluno> = ({ aoConcluirC
                   <IconeCheck tamanho={20} />
                   <span>Concluir Anamnese e Entrar no Shara-EF</span>
                 </button>
+
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.4rem' }}>
+                  <BotaoInstalarApp variante="secundario" texto="📱 Instalar App no Telefone" estilo={{ width: '100%' }} />
+                </div>
               </form>
             )}
 

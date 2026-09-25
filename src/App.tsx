@@ -135,7 +135,6 @@ export const App: React.FC = () => {
               <TelaApresentacao
                 aoIniciarNovoAluno={() => setTelaAtual('novo_aluno')}
                 aoAbrirLoginAluno={abrirLoginAluno}
-                aoAbrirLoginProfessora={abrirLoginProfessora}
               />
             )}
           </>
@@ -155,17 +154,19 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* Rodapé LGPD e Direitos */}
-      <footer className="rodape-aplicativo">
-        <div className="rodape-links">
-          <a href="/privacidade.html" target="_blank" rel="noreferrer">
-            Política de Privacidade & LGPD
-          </a>
-          <span>•</span>
-          <span style={{ color: '#94a3b8' }}>Shara-EF por Professora Sara</span>
-        </div>
-        <p>© {new Date().getFullYear()} Shara-EF. Todos os direitos reservados.</p>
-      </footer>
+      {/* Rodapé LGPD e Direitos (ocultado na área do aluno conforme solicitado) */}
+      {usuario?.papel !== 'aluno' && !alunoSimulado && (
+        <footer className="rodape-aplicativo">
+          <div className="rodape-links">
+            <a href="/privacidade.html" target="_blank" rel="noreferrer">
+              Política de Privacidade & LGPD
+            </a>
+            <span>•</span>
+            <span style={{ color: '#94a3b8' }}>Shara-EF por Professora Sara</span>
+          </div>
+          <p>© {new Date().getFullYear()} Shara-EF. Todos os direitos reservados.</p>
+        </footer>
+      )}
     </>
   );
 };

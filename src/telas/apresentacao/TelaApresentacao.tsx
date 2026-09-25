@@ -1,16 +1,14 @@
 import React from 'react';
-import { IconeAvancar, IconeCheck, IconeCoracao, IconeCronometro, IconeHaltere, IconeUsuario } from '../../componentes/icones';
+import { IconeAvancar, IconeCoracao, IconeCronometro, IconeHaltere, IconeUsuario } from '../../componentes/icones';
 
 interface PropriedadesTelaApresentacao {
   aoIniciarNovoAluno: () => void;
   aoAbrirLoginAluno: () => void;
-  aoAbrirLoginProfessora: () => void;
 }
 
 export const TelaApresentacao: React.FC<PropriedadesTelaApresentacao> = ({
   aoIniciarNovoAluno,
-  aoAbrirLoginAluno,
-  aoAbrirLoginProfessora
+  aoAbrirLoginAluno
 }) => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem', padding: '1rem 0' }}>
@@ -215,27 +213,6 @@ export const TelaApresentacao: React.FC<PropriedadesTelaApresentacao> = ({
             Cronômetro de descanso temporizado e anotação prática de carga por série.
           </p>
         </div>
-
-        <div className="cartao">
-          <div
-            style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: '10px',
-              background: 'rgba(16, 185, 129, 0.15)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: '0.8rem'
-            }}
-          >
-            <IconeCheck tamanho={22} cor="#10b981" />
-          </div>
-          <h3 style={{ fontSize: '1.1rem', marginBottom: '0.3rem', color: '#ffffff' }}>App PWA Direto</h3>
-          <p style={{ color: '#94a3b8', fontSize: '0.88rem', lineHeight: 1.5 }}>
-            Instalável na tela inicial com funcionamento rápido e suporte offline.
-          </p>
-        </div>
       </section>
 
       {/* Banner Panorâmico Horizontal da Academia */}
@@ -325,23 +302,6 @@ export const TelaApresentacao: React.FC<PropriedadesTelaApresentacao> = ({
           </div>
         </div>
       </section>
-
-      {/* Acesso Professora */}
-      <div style={{ textAlign: 'center', padding: '0.5rem' }}>
-        <button
-          onClick={aoAbrirLoginProfessora}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: '#64748b',
-            fontSize: '0.82rem',
-            cursor: 'pointer',
-            textDecoration: 'underline'
-          }}
-        >
-          Área da Professora Sara
-        </button>
-      </div>
     </div>
   );
 };

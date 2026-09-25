@@ -81,6 +81,9 @@ shara-fit/
 - [x] Gerenciamento completo de alunos na área da professora: editar cadastro, desativar/reativar acesso e excluir aluno com confirmação segura.
 - [x] Barra de status de tempo fixa no rodapé para mobile, com espaçamento adequado garantindo rolagem livre do rodapé e textos acima da barra.
 - [x] Integração natural das imagens da professora Sara na landing page: retrato vertical (`shara-vert.png`) no Hero principal com badge de status e banner panorâmico (`shara-hor.png`) destacando a metodologia em qualquer ambiente de treino.
+- [x] Botão de instalação PWA ("Instalar App no Telefone") adicionado ao final da anamnese (etapa 4 e tela de sucesso) e no painel da professora com suporte nativo e guia ilustrado para iOS/Android.
+- [x] Limpeza visual da landing page: remoção do card "App PWA Direto" e do link redundante "Área da professora Sara".
+- [x] Ocultação dos textos e links de rodapé na área do aluno, oferecendo visual limpo e imersivo de aplicativo nativo.
 
 ## 5. Diretriz Obrigatória de Versionamento e Deploy Contínuo (CI/CD)
 
