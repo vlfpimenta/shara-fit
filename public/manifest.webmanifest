@@ -1,0 +1,18 @@
+{
+  "name": "Shara-EF - Consultoria Fitness",
+  "short_name": "Shara.ef",
+  "description": "Aplicativo de treinos e acompanhamento individual com a professora Sara",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0c0f1d",
+  "theme_color": "#0c0f1d",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icone.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

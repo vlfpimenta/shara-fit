@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="gradienteRosa" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff2e7e" />
+      <stop offset="50%" stop-color="#ff0055" />
+      <stop offset="100%" stop-color="#9900ff" />
+    </linearGradient>
+    <linearGradient id="gradienteBrilho" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </linearGradient>
+    <filter id="brilho" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#ff0055" flood-opacity="0.45" />
+    </filter>
+  </defs>
+
+  <!-- Fundo com cantos arredondados -->
+  <rect width="512" height="512" rx="110" fill="#0c0f1d" />
+  
+  <!-- Círculo sutil de fundo -->
+  <circle cx="256" cy="256" r="190" fill="none" stroke="#1d2342" stroke-width="4" stroke-dasharray="8 8" />
+
+  <!-- Símbolo do Haltere Dinâmico / Movimento Fitness -->
+  <g filter="url(#brilho)" transform="translate(0, 0)">
+    <!-- Barra central diagonal -->
+    <rect x="190" y="242" width="132" height="28" rx="14" fill="#ffffff" transform="rotate(-45 256 256)" />
+    <!-- Textura aderente da barra -->
+    <line x1="228" y1="256" x2="284" y2="256" stroke="#0c0f1d" stroke-width="6" stroke-linecap="round" transform="rotate(-45 256 256)" />
+
+    <!-- Peso Superior Esquerdo -->
+    <g transform="translate(145, 145) rotate(-45)">
+      <!-- Disco externo -->
+      <rect x="-18" y="-55" width="22" height="110" rx="9" fill="url(#gradienteRosa)" />
+      <!-- Disco maior interno -->
+      <rect x="-44" y="-70" width="22" height="140" rx="11" fill="url(#gradienteRosa)" />
+      <rect x="-56" y="-30" width="10" height="60" rx="5" fill="#ffffff" opacity="0.9" />
+    </g>
+
+    <!-- Peso Inferior Direito -->
+    <g transform="translate(367, 367) rotate(-45)">
+      <!-- Disco externo -->
+      <rect x="-4" y="-55" width="22" height="110" rx="9" fill="url(#gradienteRosa)" />
+      <!-- Disco maior interno -->
+      <rect x="22" y="-70" width="22" height="140" rx="11" fill="url(#gradienteRosa)" />
+      <rect x="46" y="-30" width="10" height="60" rx="5" fill="#ffffff" opacity="0.9" />
+    </g>
+
+    <!-- Linha de Energia / Movimento Curvo -->
+    <path d="M 120 380 Q 256 460 400 360" fill="none" stroke="url(#gradienteRosa)" stroke-width="12" stroke-linecap="round" />
+    <circle cx="400" cy="360" r="10" fill="#38bdf8" />
+  </g>
+</svg>

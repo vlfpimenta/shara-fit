@@ -1,0 +1,11 @@
+# Licenças de Dependências - Shara-EF
+
+O Shara-EF utiliza apenas dependências e bibliotecas sob licenças permissivas compatíveis (MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC). É estritamente proibido o uso de licenças restritivas GPL, AGPL, LGPL e similares.
+
+## Resumo das Dependências Principais Previstas:
+- React (MIT)
+- Vite (MIT)
+- TypeScript (Apache-2.0)
+- Lucide React (MIT ou ISC)
+- Fastify / Express (MIT)
+- PostgreSQL / pg (MIT)

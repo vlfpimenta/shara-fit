@@ -1,0 +1,16 @@
+NOTAS DE TERCEIROS - SHARA-EF
+
+Este projeto faz uso de componentes de código aberto licenciados sob termos permissivos.
+Todos os direitos autorais e marcas pertencem aos seus respectivos proprietários.
+
+1. React & React DOM
+   Licença: MIT
+   Copyright (c) Meta Platforms, Inc. e afiliados.
+
+2. Vite
+   Licença: MIT
+   Copyright (c) 2019-presente, Yuxi (Evan) You e colaboradores do Vite.
+
+3. TypeScript
+   Licença: Apache-2.0
+   Copyright (c) Microsoft Corporation.
