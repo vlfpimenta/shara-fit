@@ -420,6 +420,10 @@ export class ServicoArmazenamento {
       return { sucesso: false, mensagem: 'E-mail não encontrado. Caso seja seu primeiro acesso, cadastre-se em Novo Aluno.' };
     }
 
+    if (aluno.status === 'inativo') {
+      return { sucesso: false, mensagem: 'Seu acesso foi desativado pela professora. Entre em contato para reativação.' };
+    }
+
     const senhaArmazenada = senhas[emailLimpo];
     if (!senhaArmazenada || senhaArmazenada !== senha) {
       return { sucesso: false, mensagem: 'Senha de aluno incorreta.' };
@@ -428,6 +432,146 @@ export class ServicoArmazenamento {
     this.definirSessao(aluno);
     this.desativarModoSimulacao();
     return { sucesso: true, mensagem: `Olá, ${aluno.nome}! Bom treino.`, usuario: aluno };
+  }
+
+  // --------------------------------------------------------------------------
+  // Gestão de Alunos (Editar, Desativar / Reativar Acesso e Excluir)
+  // --------------------------------------------------------------------------
+
+  // Atualizar dados cadastrais do aluno
+  static async atualizarDadosAluno(
+    alunoId: string,
+    dadosAtualizados: {
+      nome?: string;
+      email?: string;
+      status?: 'ativo' | 'inativo' | 'aguardando_ficha';
+      contato?: string;
+      idade?: string;
+      peso?: string;
+      altura?: string;
+      objetivoPrincipal?: string;
+    }
+  ): Promise<{ sucesso: boolean; mensagem: string }> {
+    const alunos = this.obterAlunos();
+    const index = alunos.findIndex((a) => a.id === alunoId);
+    if (index === -1) {
+      return { sucesso: false, mensagem: 'Aluno não encontrado.' };
+    }
+
+    const aluno = alunos[index];
+    if (dadosAtualizados.nome) {
+      aluno.nome = dadosAtualizados.nome.trim();
+      aluno.anamnese.nome = dadosAtualizados.nome.trim();
+    }
+    if (dadosAtualizados.email) {
+      const emailAntigo = aluno.email.toLowerCase();
+      const emailNovo = dadosAtualizados.email.trim().toLowerCase();
+      const senhasRaw = localStorage.getItem(CHAVE_SENHAS);
+      if (senhasRaw) {
+        const senhas = JSON.parse(senhasRaw);
+        if (senhas[emailAntigo]) {
+          senhas[emailNovo] = senhas[emailAntigo];
+          delete senhas[emailAntigo];
+          localStorage.setItem(CHAVE_SENHAS, JSON.stringify(senhas));
+        }
+      }
+      aluno.email = emailNovo;
+    }
+    if (dadosAtualizados.status) {
+      aluno.status = dadosAtualizados.status;
+    }
+    if (dadosAtualizados.contato) aluno.anamnese.contato = dadosAtualizados.contato.trim();
+    if (dadosAtualizados.idade) aluno.anamnese.idade = dadosAtualizados.idade.trim();
+    if (dadosAtualizados.peso) aluno.anamnese.peso = dadosAtualizados.peso.trim();
+    if (dadosAtualizados.altura) aluno.anamnese.altura = dadosAtualizados.altura.trim();
+    if (dadosAtualizados.objetivoPrincipal) aluno.anamnese.objetivoPrincipal = dadosAtualizados.objetivoPrincipal.trim();
+
+    alunos[index] = aluno;
+    this.salvarAlunos(alunos);
+
+    const sessao = this.obterSessao();
+    if (sessao && sessao.id === alunoId) {
+      this.definirSessao(aluno);
+    }
+
+    try {
+      const urlApi = this.obterUrlApi();
+      await fetch(`${urlApi}/api/alunos/${alunoId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dadosAtualizados)
+      });
+    } catch {}
+
+    return { sucesso: true, mensagem: 'Dados do aluno atualizados com sucesso!' };
+  }
+
+  // Alternar status (ativar / desativar acesso)
+  static async alternarStatusAluno(
+    alunoId: string,
+    novoStatus: 'ativo' | 'inativo' | 'aguardando_ficha'
+  ): Promise<{ sucesso: boolean; mensagem: string }> {
+    const alunos = this.obterAlunos();
+    const index = alunos.findIndex((a) => a.id === alunoId);
+    if (index === -1) {
+      return { sucesso: false, mensagem: 'Aluno não encontrado.' };
+    }
+
+    alunos[index].status = novoStatus;
+    this.salvarAlunos(alunos);
+
+    try {
+      const urlApi = this.obterUrlApi();
+      await fetch(`${urlApi}/api/alunos/${alunoId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: novoStatus })
+      });
+    } catch {}
+
+    return {
+      sucesso: true,
+      mensagem: novoStatus === 'inativo' ? 'Acesso do aluno desativado.' : 'Acesso do aluno ativado.'
+    };
+  }
+
+  // Excluir aluno definitivamente
+  static async excluirAluno(alunoId: string): Promise<{ sucesso: boolean; mensagem: string }> {
+    const alunos = this.obterAlunos();
+    const aluno = alunos.find((a) => a.id === alunoId);
+    if (!aluno) {
+      return { sucesso: false, mensagem: 'Aluno não encontrado.' };
+    }
+
+    const novosAlunos = alunos.filter((a) => a.id !== alunoId);
+    this.salvarAlunos(novosAlunos);
+
+    try {
+      const senhasRaw = localStorage.getItem(CHAVE_SENHAS);
+      if (senhasRaw) {
+        const senhas = JSON.parse(senhasRaw);
+        delete senhas[aluno.email.toLowerCase()];
+        localStorage.setItem(CHAVE_SENHAS, JSON.stringify(senhas));
+      }
+    } catch {}
+
+    if (localStorage.getItem(CHAVE_MODO_SIMULACAO) === alunoId) {
+      this.desativarModoSimulacao();
+    }
+
+    const sessao = this.obterSessao();
+    if (sessao && sessao.id === alunoId) {
+      this.encerrarSessao();
+    }
+
+    try {
+      const urlApi = this.obterUrlApi();
+      await fetch(`${urlApi}/api/alunos/${alunoId}`, {
+        method: 'DELETE'
+      });
+    } catch {}
+
+    return { sucesso: true, mensagem: 'Aluno excluído com sucesso.' };
   }
 
   // Gerenciamento de sessão

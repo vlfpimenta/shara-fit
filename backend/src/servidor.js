@@ -81,6 +81,10 @@ fastify.post('/api/auth/login', async (requisicao, resposta) => {
       return resposta.status(401).send({ sucesso: false, mensagem: 'Senha incorreta.' });
     }
 
+    if (usuario.papel === 'aluno' && usuario.status === 'inativo') {
+      return resposta.status(403).send({ sucesso: false, mensagem: 'Seu acesso foi desativado pela professora. Entre em contato para reativação.' });
+    }
+
     const token = fastify.jwt.sign({
       id: usuario.id,
       papel: usuario.papel,
@@ -290,6 +294,90 @@ fastify.get('/api/alunos', { preHandler: [fastify.autenticar, fastify.exigirProf
       ORDER BY u.data_cadastro DESC
     `);
     return { sucesso: true, alunos: resultado.rows };
+  } finally {
+    cliente.release();
+  }
+});
+
+// 5. Atualizar Dados do Aluno (Editar)
+fastify.put('/api/alunos/:id', async (requisicao, resposta) => {
+  const { id } = requisicao.params;
+  const { nome, email, contato, idade, peso, altura, objetivoPrincipal, status } = requisicao.body || {};
+
+  const cliente = await pool.connect();
+  try {
+    await cliente.query('BEGIN');
+
+    if (nome || email || status) {
+      const campos = [];
+      const valores = [];
+      let idx = 1;
+      if (nome) { campos.push(`nome = $${idx++}`); valores.push(nome.trim()); }
+      if (email) { campos.push(`email = $${idx++}`); valores.push(email.trim().toLowerCase()); }
+      if (status) { campos.push(`status = $${idx++}`); valores.push(status); }
+      valores.push(id);
+      await cliente.query(`UPDATE usuarios SET ${campos.join(', ')} WHERE id = $${idx}`, valores);
+    }
+
+    if (contato || idade || peso || altura || objetivoPrincipal) {
+      const camposAnam = [];
+      const valoresAnam = [];
+      let idxAnam = 1;
+      if (nome) { camposAnam.push(`nome = $${idxAnam++}`); valoresAnam.push(nome.trim()); }
+      if (contato) { camposAnam.push(`contato = $${idxAnam++}`); valoresAnam.push(contato.trim()); }
+      if (idade) { camposAnam.push(`idade = $${idxAnam++}`); valoresAnam.push(idade.trim()); }
+      if (peso) { camposAnam.push(`peso = $${idxAnam++}`); valoresAnam.push(peso.trim()); }
+      if (altura) { camposAnam.push(`altura = $${idxAnam++}`); valoresAnam.push(altura.trim()); }
+      if (objetivoPrincipal) { camposAnam.push(`objetivo_principal = $${idxAnam++}`); valoresAnam.push(objetivoPrincipal.trim()); }
+      valoresAnam.push(id);
+      await cliente.query(`UPDATE anamneses SET ${camposAnam.join(', ')} WHERE usuario_id = $${idxAnam}`, valoresAnam);
+    }
+
+    await cliente.query('COMMIT');
+    return { sucesso: true, mensagem: 'Dados do aluno atualizados com sucesso!' };
+  } catch (erro) {
+    await cliente.query('ROLLBACK');
+    fastify.log.error(erro);
+    return resposta.status(500).send({ sucesso: false, mensagem: 'Erro ao atualizar aluno.' });
+  } finally {
+    cliente.release();
+  }
+});
+
+// 6. Alternar Status do Aluno (Ativar / Desativar Acesso)
+fastify.patch('/api/alunos/:id/status', async (requisicao, resposta) => {
+  const { id } = requisicao.params;
+  const { status } = requisicao.body || {};
+
+  if (!['ativo', 'inativo', 'aguardando_ficha'].includes(status)) {
+    return resposta.status(400).send({ sucesso: false, mensagem: 'Status inválido.' });
+  }
+
+  const cliente = await pool.connect();
+  try {
+    const res = await cliente.query(
+      "UPDATE usuarios SET status = $1 WHERE id = $2 AND papel = 'aluno' RETURNING id, status",
+      [status, id]
+    );
+    if (res.rowCount === 0) {
+      return resposta.status(404).send({ sucesso: false, mensagem: 'Aluno não encontrado.' });
+    }
+    return { sucesso: true, mensagem: `Status alterado para '${status}'.`, status };
+  } finally {
+    cliente.release();
+  }
+});
+
+// 7. Excluir Aluno
+fastify.delete('/api/alunos/:id', async (requisicao, resposta) => {
+  const { id } = requisicao.params;
+  const cliente = await pool.connect();
+  try {
+    const res = await cliente.query("DELETE FROM usuarios WHERE id = $1 AND papel = 'aluno'", [id]);
+    if (res.rowCount === 0) {
+      return resposta.status(404).send({ sucesso: false, mensagem: 'Aluno não encontrado.' });
+    }
+    return { sucesso: true, mensagem: 'Aluno excluído com sucesso.' };
   } finally {
     cliente.release();
   }

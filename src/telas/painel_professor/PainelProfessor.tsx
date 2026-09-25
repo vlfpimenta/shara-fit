@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { BIBLIOTECA_EXERCICIOS } from '../../dados/iniciais';
 import {
+  IconeBloquear,
   IconeCheck,
+  IconeDesbloquear,
   IconeEditar,
   IconeFechar,
   IconeInformacao,
@@ -21,6 +23,21 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
   const [buscaAluno, setBuscaAluno] = useState<string>('');
   const [alunoSelecionadoAnamnese, setAlunoSelecionadoAnamnese] = useState<UsuarioAluno | null>(null);
   const [alunoParaPrescrever, setAlunoParaPrescrever] = useState<UsuarioAluno | null>(null);
+
+  // Estados de Gestão de Aluno (Editar, Desativar e Excluir)
+  const [alunoParaEditar, setAlunoParaEditar] = useState<UsuarioAluno | null>(null);
+  const [nomeEdicao, setNomeEdicao] = useState<string>('');
+  const [emailEdicao, setEmailEdicao] = useState<string>('');
+  const [contatoEdicao, setContatoEdicao] = useState<string>('');
+  const [idadeEdicao, setIdadeEdicao] = useState<string>('');
+  const [pesoEdicao, setPesoEdicao] = useState<string>('');
+  const [alturaEdicao, setAlturaEdicao] = useState<string>('');
+  const [objetivoEdicao, setObjetivoEdicao] = useState<string>('');
+  const [statusEdicao, setStatusEdicao] = useState<'ativo' | 'inativo' | 'aguardando_ficha'>('ativo');
+  const [salvandoEdicao, setSalvandoEdicao] = useState<boolean>(false);
+
+  const [alunoParaExcluir, setAlunoParaExcluir] = useState<UsuarioAluno | null>(null);
+  const [excluindoAluno, setExcluindoAluno] = useState<boolean>(false);
 
   // Estados do Construtor de Ficha
   const [tituloFicha, setTituloFicha] = useState<string>('');
@@ -49,6 +66,53 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
     ServicoArmazenamento.definirUrlApi(urlApiInput);
     alert('Domínio da API salvo com sucesso!');
     setModalConfigApiAberta(false);
+  };
+
+  // Funções de Gestão de Alunos (Editar, Desativar e Excluir)
+  const abrirEdicaoAluno = (aluno: UsuarioAluno) => {
+    setAlunoParaEditar(aluno);
+    setNomeEdicao(aluno.nome);
+    setEmailEdicao(aluno.email);
+    setContatoEdicao(aluno.anamnese.contato || '');
+    setIdadeEdicao(aluno.anamnese.idade || '');
+    setPesoEdicao(aluno.anamnese.peso || '');
+    setAlturaEdicao(aluno.anamnese.altura || '');
+    setObjetivoEdicao(aluno.anamnese.objetivoPrincipal || '');
+    setStatusEdicao(aluno.status);
+  };
+
+  const salvarAlteracoesAluno = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!alunoParaEditar) return;
+    setSalvandoEdicao(true);
+    await ServicoArmazenamento.atualizarDadosAluno(alunoParaEditar.id, {
+      nome: nomeEdicao,
+      email: emailEdicao,
+      contato: contatoEdicao,
+      idade: idadeEdicao,
+      peso: pesoEdicao,
+      altura: alturaEdicao,
+      objetivoPrincipal: objetivoEdicao,
+      status: statusEdicao
+    });
+    setAlunos(ServicoArmazenamento.obterAlunos());
+    setSalvandoEdicao(false);
+    setAlunoParaEditar(null);
+  };
+
+  const alternarStatusAluno = async (aluno: UsuarioAluno) => {
+    const novoStatus: 'ativo' | 'inativo' = aluno.status === 'inativo' ? 'ativo' : 'inativo';
+    await ServicoArmazenamento.alternarStatusAluno(aluno.id, novoStatus);
+    setAlunos(ServicoArmazenamento.obterAlunos());
+  };
+
+  const confirmarExclusaoAluno = async () => {
+    if (!alunoParaExcluir) return;
+    setExcluindoAluno(true);
+    await ServicoArmazenamento.excluirAluno(alunoParaExcluir.id);
+    setAlunos(ServicoArmazenamento.obterAlunos());
+    setExcluindoAluno(false);
+    setAlunoParaExcluir(null);
   };
 
   // Filtragem de alunos
@@ -179,22 +243,28 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
         </div>
 
         {/* Resumo Rápido */}
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <div className="cartao" style={{ padding: '0.8rem 1.2rem', textAlign: 'center' }}>
-            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#ff2e7e' }}>{alunos.length}</div>
+        <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap' }}>
+          <div className="cartao" style={{ padding: '0.7rem 1.1rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#ff2e7e' }}>{alunos.length}</div>
             <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Total de Alunos</div>
           </div>
-          <div className="cartao" style={{ padding: '0.8rem 1.2rem', textAlign: 'center' }}>
-            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#10b981' }}>
+          <div className="cartao" style={{ padding: '0.7rem 1.1rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#10b981' }}>
               {alunos.filter((a) => a.status === 'ativo').length}
             </div>
             <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Treinos Ativos</div>
           </div>
-          <div className="cartao" style={{ padding: '0.8rem 1.2rem', textAlign: 'center' }}>
-            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#f59e0b' }}>
+          <div className="cartao" style={{ padding: '0.7rem 1.1rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#f59e0b' }}>
               {alunos.filter((a) => a.status === 'aguardando_ficha').length}
             </div>
             <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Aguardando Ficha</div>
+          </div>
+          <div className="cartao" style={{ padding: '0.7rem 1.1rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#ef4444' }}>
+              {alunos.filter((a) => a.status === 'inativo').length}
+            </div>
+            <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Acesso Desativado</div>
           </div>
         </div>
       </div>
@@ -214,7 +284,7 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
       <div className="cartao" style={{ padding: '0', overflow: 'hidden' }}>
         <div style={{ padding: '1.2rem 1.5rem', borderBottom: '1px solid #28325c', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3 style={{ fontSize: '1.15rem', color: '#ffffff' }}>Lista de Alunos ({alunosFiltrados.length})</h3>
-          <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Visualização de modo aluno disponível por aluno</span>
+          <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Gestão completa de acessos e fichas</span>
         </div>
 
         <div style={{ overflowX: 'auto' }}>
@@ -240,6 +310,7 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
                     key={aluno.id}
                     style={{
                       borderBottom: '1px solid #1c2344',
+                      opacity: aluno.status === 'inativo' ? 0.75 : 1,
                       transition: 'background 0.2s ease'
                     }}
                   >
@@ -262,55 +333,129 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
                     <td style={{ padding: '1rem 1rem' }}>
                       {aluno.status === 'ativo' ? (
                         <span className="badge badge-sucesso">Treino Ativo</span>
+                      ) : aluno.status === 'inativo' ? (
+                        <span
+                          className="badge"
+                          style={{
+                            background: 'rgba(239, 68, 68, 0.15)',
+                            border: '1px solid #ef4444',
+                            color: '#fca5a5'
+                          }}
+                        >
+                          Acesso Desativado
+                        </span>
                       ) : (
                         <span className="badge badge-aviso">Aguardando Prescrição</span>
                       )}
                     </td>
 
                     <td style={{ padding: '1rem 1.2rem', textAlign: 'right' }}>
-                      <div style={{ display: 'inline-flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                        {/* Ver Anamnese Completa */}
-                        <button
-                          className="botao-secundario"
-                          onClick={() => setAlunoSelecionadoAnamnese(aluno)}
-                          style={{ padding: '0.45rem 0.8rem', fontSize: '0.82rem' }}
-                          title="Ver respostas completas da anamnese"
-                        >
-                          <IconeInformacao tamanho={16} />
-                          <span>Anamnese</span>
-                        </button>
-
+                      <div style={{ display: 'inline-flex', gap: '0.4rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                         {/* Prescrever / Editar Treino */}
                         <button
                           className="botao-primario"
                           onClick={() => iniciarPrescricao(aluno)}
-                          style={{ padding: '0.45rem 0.85rem', fontSize: '0.82rem' }}
+                          style={{ padding: '0.4rem 0.75rem', fontSize: '0.8rem' }}
                           title="Montar ou alterar ficha de treinos"
                         >
-                          <IconeEditar tamanho={16} />
-                          <span>{aluno.fichaAtiva ? 'Editar Treino' : 'Prescrever'}</span>
+                          <IconeEditar tamanho={15} />
+                          <span>{aluno.fichaAtiva ? 'Treino' : 'Prescrever'}</span>
                         </button>
 
-                        {/* Botão de Modo Aluno (Requisito Explícito) */}
+                        {/* Editar Aluno */}
+                        <button
+                          className="botao-secundario"
+                          onClick={() => abrirEdicaoAluno(aluno)}
+                          style={{ padding: '0.4rem 0.7rem', fontSize: '0.8rem' }}
+                          title="Editar dados cadastrais do aluno"
+                        >
+                          <IconeEditar tamanho={15} />
+                          <span>Editar</span>
+                        </button>
+
+                        {/* Desativar / Reativar Acesso */}
+                        <button
+                          onClick={() => alternarStatusAluno(aluno)}
+                          style={{
+                            background: aluno.status === 'inativo' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                            border: aluno.status === 'inativo' ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(245, 158, 11, 0.4)',
+                            color: aluno.status === 'inativo' ? '#6ee7b7' : '#fcd34d',
+                            padding: '0.4rem 0.7rem',
+                            borderRadius: '8px',
+                            fontSize: '0.8rem',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.3rem'
+                          }}
+                          title={aluno.status === 'inativo' ? 'Reativar acesso do aluno' : 'Desativar acesso do aluno temporariamente'}
+                        >
+                          {aluno.status === 'inativo' ? (
+                            <>
+                              <IconeDesbloquear tamanho={15} />
+                              <span>Reativar</span>
+                            </>
+                          ) : (
+                            <>
+                              <IconeBloquear tamanho={15} />
+                              <span>Desativar</span>
+                            </>
+                          )}
+                        </button>
+
+                        {/* Excluir Aluno */}
+                        <button
+                          onClick={() => setAlunoParaExcluir(aluno)}
+                          style={{
+                            background: 'rgba(239, 68, 68, 0.12)',
+                            border: '1px solid rgba(239, 68, 68, 0.35)',
+                            color: '#fca5a5',
+                            padding: '0.4rem 0.65rem',
+                            borderRadius: '8px',
+                            fontSize: '0.8rem',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.25rem'
+                          }}
+                          title="Excluir aluno definitivamente"
+                        >
+                          <IconeLixeira tamanho={15} />
+                          <span>Excluir</span>
+                        </button>
+
+                        {/* Modo Aluno */}
                         <button
                           onClick={() => aoAtivarModoAluno(aluno.id)}
                           style={{
                             background: 'rgba(139, 0, 255, 0.15)',
                             border: '1px solid rgba(139, 0, 255, 0.4)',
                             color: '#c084fc',
-                            padding: '0.45rem 0.85rem',
-                            borderRadius: '10px',
-                            fontSize: '0.82rem',
+                            padding: '0.4rem 0.75rem',
+                            borderRadius: '8px',
+                            fontSize: '0.8rem',
                             fontWeight: 700,
                             cursor: 'pointer',
                             display: 'inline-flex',
                             alignItems: 'center',
-                            gap: '0.35rem'
+                            gap: '0.3rem'
                           }}
                           title="Simular visualização idêntica à que o aluno vê no celular"
                         >
-                          <IconeOlho tamanho={16} />
+                          <IconeOlho tamanho={15} />
                           <span>Modo Aluno</span>
+                        </button>
+
+                        {/* Anamnese */}
+                        <button
+                          className="botao-secundario"
+                          onClick={() => setAlunoSelecionadoAnamnese(aluno)}
+                          style={{ padding: '0.4rem 0.7rem', fontSize: '0.8rem' }}
+                          title="Ver respostas completas da anamnese"
+                        >
+                          <IconeInformacao tamanho={15} />
                         </button>
                       </div>
                     </td>
@@ -892,6 +1037,225 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
                   Salvar Domínio
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Edição de Aluno */}
+      {alunoParaEditar && (
+        <div className="overlay-modal" onClick={() => setAlunoParaEditar(null)}>
+          <div className="conteudo-modal" style={{ maxWidth: '580px' }} onClick={(e) => e.stopPropagation()}>
+            <div className="cabecalho-modal">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <div
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '8px',
+                    background: '#ff2e7e',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <IconeEditar tamanho={18} cor="#fff" />
+                </div>
+                <h3 className="titulo-modal">Editar Aluno</h3>
+              </div>
+              <button
+                onClick={() => setAlunoParaEditar(null)}
+                style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px' }}
+              >
+                <IconeFechar tamanho={20} />
+              </button>
+            </div>
+
+            <form onSubmit={salvarAlteracoesAluno} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="grupo-campo">
+                <label className="rotulo-campo">Nome Completo</label>
+                <input
+                  type="text"
+                  className="campo-texto"
+                  required
+                  value={nomeEdicao}
+                  onChange={(e) => setNomeEdicao(e.target.value)}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+                <div className="grupo-campo">
+                  <label className="rotulo-campo">E-mail de Acesso</label>
+                  <input
+                    type="email"
+                    className="campo-texto"
+                    required
+                    value={emailEdicao}
+                    onChange={(e) => setEmailEdicao(e.target.value)}
+                  />
+                </div>
+
+                <div className="grupo-campo">
+                  <label className="rotulo-campo">Contato / WhatsApp</label>
+                  <input
+                    type="text"
+                    className="campo-texto"
+                    value={contatoEdicao}
+                    onChange={(e) => setContatoEdicao(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.8rem' }}>
+                <div className="grupo-campo">
+                  <label className="rotulo-campo">Idade (anos)</label>
+                  <input
+                    type="text"
+                    className="campo-texto"
+                    value={idadeEdicao}
+                    onChange={(e) => setIdadeEdicao(e.target.value)}
+                  />
+                </div>
+
+                <div className="grupo-campo">
+                  <label className="rotulo-campo">Peso (kg)</label>
+                  <input
+                    type="text"
+                    className="campo-texto"
+                    value={pesoEdicao}
+                    onChange={(e) => setPesoEdicao(e.target.value)}
+                  />
+                </div>
+
+                <div className="grupo-campo">
+                  <label className="rotulo-campo">Altura (cm)</label>
+                  <input
+                    type="text"
+                    className="campo-texto"
+                    value={alturaEdicao}
+                    onChange={(e) => setAlturaEdicao(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="grupo-campo">
+                <label className="rotulo-campo">Objetivo Principal</label>
+                <input
+                  type="text"
+                  className="campo-texto"
+                  value={objetivoEdicao}
+                  onChange={(e) => setObjetivoEdicao(e.target.value)}
+                />
+              </div>
+
+              <div className="grupo-campo">
+                <label className="rotulo-campo">Status do Acesso</label>
+                <select
+                  className="campo-texto"
+                  value={statusEdicao}
+                  onChange={(e) => setStatusEdicao(e.target.value as 'ativo' | 'inativo' | 'aguardando_ficha')}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <option value="ativo">Treino Ativo (Acesso Liberado)</option>
+                  <option value="aguardando_ficha">Aguardando Prescrição</option>
+                  <option value="inativo">Acesso Desativado (Bloquear Login)</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.8rem', marginTop: '0.5rem' }}>
+                <button
+                  type="button"
+                  className="botao-secundario"
+                  onClick={() => setAlunoParaEditar(null)}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="botao-primario"
+                  disabled={salvandoEdicao}
+                >
+                  {salvandoEdicao ? 'Salvando...' : 'Salvar Alterações'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Exclusão de Aluno */}
+      {alunoParaExcluir && (
+        <div className="overlay-modal" onClick={() => setAlunoParaExcluir(null)}>
+          <div className="conteudo-modal" style={{ maxWidth: '480px' }} onClick={(e) => e.stopPropagation()}>
+            <div className="cabecalho-modal">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <div
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '8px',
+                    background: 'rgba(239, 68, 68, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <IconeLixeira tamanho={18} cor="#ef4444" />
+                </div>
+                <h3 className="titulo-modal" style={{ color: '#fca5a5' }}>Confirmar Exclusão</h3>
+              </div>
+              <button
+                onClick={() => setAlunoParaExcluir(null)}
+                style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px' }}
+              >
+                <IconeFechar tamanho={20} />
+              </button>
+            </div>
+
+            <div style={{ marginBottom: '1.5rem', color: '#cbd5e1', fontSize: '0.9rem', lineHeight: 1.6 }}>
+              <p style={{ marginBottom: '0.8rem' }}>
+                Tem certeza que deseja excluir o(a) aluno(a) <strong>{alunoParaExcluir.nome}</strong> (<code>{alunoParaExcluir.email}</code>)?
+              </p>
+              <div
+                style={{
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  padding: '0.8rem',
+                  borderRadius: '8px',
+                  fontSize: '0.82rem',
+                  color: '#fca5a5'
+                }}
+              >
+                ⚠️ Todos os dados cadastrais, respostas de anamnese e histórico de treinos prescritos serão removidos permanentemente.
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.8rem' }}>
+              <button
+                type="button"
+                className="botao-secundario"
+                disabled={excluindoAluno}
+                onClick={() => setAlunoParaExcluir(null)}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={excluindoAluno}
+                onClick={confirmarExclusaoAluno}
+                style={{
+                  background: '#ef4444',
+                  border: 'none',
+                  color: '#ffffff',
+                  padding: '0.6rem 1.2rem',
+                  borderRadius: '10px',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  cursor: 'pointer'
+                }}
+              >
+                {excluindoAluno ? 'Excluindo...' : 'Sim, Excluir Aluno'}
+              </button>
             </div>
           </div>
         </div>

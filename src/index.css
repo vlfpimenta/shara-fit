@@ -602,13 +602,93 @@ body::after {
   }
 
   .conteudo-principal {
-    padding: 1rem 0.75rem 5rem 0.75rem;
+    padding: 1rem 0.75rem 2rem 0.75rem;
   }
 
+  /* No mobile: badge de tempo torna-se uma barra de status fixa no rodapé */
   .cronometro-flutuante {
-    left: 1rem;
-    right: 1rem;
-    bottom: 1rem;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    border-radius: 0;
+    border-top: 1px solid rgba(255, 46, 126, 0.4);
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    background: rgba(12, 15, 29, 0.98);
+    backdrop-filter: blur(16px);
+    padding: 0.65rem 1rem calc(0.65rem + env(safe-area-inset-bottom, 0px)) 1rem;
+    box-shadow: 0 -8px 25px rgba(0, 0, 0, 0.7);
+    animation: none;
+    z-index: 99;
     justify-content: space-between;
   }
+
+  button.cronometro-flutuante {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    border-radius: 0;
+    border-top: 1px solid rgba(255, 46, 126, 0.4);
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    background: rgba(12, 15, 29, 0.98);
+    backdrop-filter: blur(16px);
+    padding: 0.5rem 1rem calc(0.5rem + env(safe-area-inset-bottom, 0px)) 1rem;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.7);
+    animation: none;
+    z-index: 99;
+    justify-content: center;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  /* Garante que o rodapé e qualquer texto rolem acima da barra de status fixa sem sobreposição */
+  .rodape-aplicativo {
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* ==========================================================================
+   Rodapé do Aplicativo (LGPD e Créditos)
+   ========================================================================== */
+
+.rodape-aplicativo {
+  margin-top: auto;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  border-top: 1px solid var(--cor-borda);
+  background: rgba(12, 15, 29, 0.6);
+  font-size: 0.85rem;
+  color: var(--cor-texto-sutil);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+  position: relative;
+  z-index: 10;
+}
+
+.rodape-links {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.rodape-links a {
+  color: var(--cor-texto-secundario);
+  text-decoration: none;
+  transition: var(--transicao-padrao);
+}
+
+.rodape-links a:hover {
+  color: var(--cor-primaria);
 }

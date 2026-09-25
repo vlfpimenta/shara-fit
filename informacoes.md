@@ -78,6 +78,8 @@ shara-fit/
 - [x] Remoção definitiva de qualquer exibição de credencial padrão ou texto inseguro na interface e no código.
 - [x] Estilização de todas as barras de rolagem para o tema escuro (`::-webkit-scrollbar` e `scrollbar-color`).
 - [x] Redução e enxugamento de textos longos e prolixos na apresentação e anamnese.
+- [x] Gerenciamento completo de alunos na área da professora: editar cadastro, desativar/reativar acesso e excluir aluno com confirmação segura.
+- [x] Barra de status de tempo fixa no rodapé para mobile, com espaçamento adequado garantindo rolagem livre do rodapé e textos acima da barra.
 
 ## 5. Diretriz Obrigatória de Versionamento e Deploy Contínuo (CI/CD)
 
