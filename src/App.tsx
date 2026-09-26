@@ -17,6 +17,8 @@ export const App: React.FC = () => {
   const [modalLoginAlunoAberto, setModalLoginAlunoAberto] = useState<boolean>(false);
   const [modalLoginProfessorAberto, setModalLoginProfessorAberto] = useState<boolean>(false);
   const [modalPrivacidadeAberto, setModalPrivacidadeAberto] = useState<boolean>(false);
+  const [toquesLogo, setToquesLogo] = useState<number>(0);
+  const temporizadorToquesRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Inicializar estado a partir do armazenamento local
   useEffect(() => {
@@ -96,6 +98,23 @@ export const App: React.FC = () => {
   const abrirLoginProfessora = () => {
     window.history.pushState({ modal: 'login_professor' }, '');
     setModalLoginProfessorAberto(true);
+  };
+
+  const tratarToqueLogo = () => {
+    if (temporizadorToquesRef.current) {
+      clearTimeout(temporizadorToquesRef.current);
+    }
+
+    const novosToques = toquesLogo + 1;
+    if (novosToques >= 5) {
+      setToquesLogo(0);
+      abrirLoginProfessora();
+    } else {
+      setToquesLogo(novosToques);
+      temporizadorToquesRef.current = setTimeout(() => {
+        setToquesLogo(0);
+      }, 3000);
+    }
   };
 
   const fecharLoginProfessora = () => {
@@ -275,30 +294,15 @@ export const App: React.FC = () => {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '0.65rem'
+              gap: '0.45rem'
             }}
           >
-            <button
-              type="button"
-              onClick={abrirModalPrivacidade}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#38bdf8',
-                cursor: 'pointer',
-                fontSize: '0.82rem',
-                textDecoration: 'underline'
-              }}
-            >
-              Política de Privacidade & LGPD
-            </button>
-
-            {/* Logo VLFP Info com 50px de altura e gatilho de login para a professora */}
+            {/* Logo VLFP Info com 50px de altura e gatilho de login para a professora (5 toques) */}
             <div
-              onClick={abrirLoginProfessora}
+              onClick={tratarToqueLogo}
               role="button"
               tabIndex={0}
-              title="Acesso da Professora Sara"
+              title="VLFP Info"
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -329,8 +333,44 @@ export const App: React.FC = () => {
                 Desenvolvido por VLFP Info
               </span>
             </div>
+
+            {/* Contador sutil ao tocar no logo para professora */}
+            {toquesLogo >= 2 && (
+              <span style={{ fontSize: '0.72rem', color: '#ff80aa', fontWeight: 600 }}>
+                Toque mais {5 - toquesLogo}x para acessar
+              </span>
+            )}
           </div>
-          <p style={{ marginTop: '0.55rem' }}>© {new Date().getFullYear()} Shara-EF. Todos os direitos reservados.</p>
+
+          {/* Texto Copyright 2026 Shara-EF */}
+          <p style={{ marginTop: '0.55rem', color: '#94a3b8', fontSize: '0.82rem' }}>
+            © {new Date().getFullYear()} Shara-EF. Todos os direitos reservados.
+          </p>
+
+          {/* Link de Política e Privacidade no final da lista, abaixo de 2026 Shara-EF, em cinza */}
+          <div style={{ marginTop: '0.35rem' }}>
+            <button
+              type="button"
+              onClick={abrirModalPrivacidade}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#94a3b8',
+                cursor: 'pointer',
+                fontSize: '0.78rem',
+                textDecoration: 'underline',
+                transition: 'color 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#cbd5e1';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = '#94a3b8';
+              }}
+            >
+              Política de Privacidade & LGPD
+            </button>
+          </div>
         </footer>
       )}
     </>

@@ -96,6 +96,7 @@ shara-fit/
 - [x] Correção do link de privacidade na anamnese com o novo componente `ModalPrivacidade.tsx`, contendo botão de fechar acessível e visual integrado para evitar travamento em PWA standalone.
 - [x] Implementação de suporte nativo ao botão "Voltar" (Hardware Android / Navegador) via History API (`pushState` e `popstate`), permitindo retroceder entre etapas da anamnese, fechar modais e sair do modo simulado sem fechar o aplicativo.
 - [x] Restauração da escala ampla e imponente exclusiva da homepage (`.homepage-apresentacao` com base de 16px, botões hero de 46-48px, tipografia fluida e fotos originais), mantendo a escala compacta ergonômica (MiniBOM) nas telas internas de treino, cadastro e painel.
+- [x] Centralização de textos e botões no card Hero da homepage, remoção da badge "Prescrição Sara EF", link de Política de Privacidade reposicionado abaixo do copyright em cor cinza e ativação do login da professora por toque quintuplo (5 cliques) no logo VLFP Info.
 
 ## 5. Diretriz Obrigatória de Versionamento e Deploy Contínuo (CI/CD)
 

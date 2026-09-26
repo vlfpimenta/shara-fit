@@ -1,5 +1,5 @@
 import React from 'react';
-import { IconeAvancar, IconeCoracao, IconeCronometro, IconeHaltere, IconeUsuario } from '../../componentes/icones';
+import { IconeAvancar, IconeCronometro, IconeHaltere, IconeUsuario } from '../../componentes/icones';
 
 interface PropriedadesTelaApresentacao {
   aoIniciarNovoAluno: () => void;
@@ -31,14 +31,15 @@ export const TelaApresentacao: React.FC<PropriedadesTelaApresentacao> = ({
             alignItems: 'center'
           }}
         >
-          {/* Coluna de Texto e Ações */}
-          <div>
-            <div style={{ display: 'inline-flex', marginBottom: '1rem' }}>
-              <span className="badge badge-primaria">
-                <IconeCoracao tamanho={14} cor="#ff2e7e" /> Prescrição Sara EF
-              </span>
-            </div>
-
+          {/* Coluna de Texto e Ações (Centralizada) */}
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'center'
+            }}
+          >
             <h1
               style={{
                 fontSize: 'clamp(2rem, 4.5vw, 3rem)',
@@ -48,7 +49,8 @@ export const TelaApresentacao: React.FC<PropriedadesTelaApresentacao> = ({
                 marginBottom: '0.9rem',
                 background: 'linear-gradient(135deg, #ffffff 40%, #ff80aa 100%)',
                 WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent'
+                WebkitTextFillColor: 'transparent',
+                textAlign: 'center'
               }}
             >
               Evolução física com treino individualizado.
@@ -60,19 +62,21 @@ export const TelaApresentacao: React.FC<PropriedadesTelaApresentacao> = ({
                 fontSize: 'clamp(0.95rem, 1.8vw, 1.05rem)',
                 lineHeight: 1.6,
                 marginBottom: '1.8rem',
-                maxWidth: '520px'
+                maxWidth: '520px',
+                textAlign: 'center'
               }}
             >
               Treinos prescritos sob medida pela professora Sara, com cronômetro de descanso e controle de cargas no celular.
             </p>
 
-            {/* Botões de Ação */}
+            {/* Botões de Ação Centralizados */}
             <div
               style={{
                 display: 'flex',
                 flexWrap: 'wrap',
                 gap: '0.8rem',
-                alignItems: 'center'
+                alignItems: 'center',
+                justifyContent: 'center'
               }}
             >
               <button
