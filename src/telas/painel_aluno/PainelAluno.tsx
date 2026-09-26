@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { CronometroDescanso } from '../../componentes/cronometro/CronometroDescanso';
-import { IconeCheck, IconeCronometro, IconeHaltere, IconeInformacao, IconePdf } from '../../componentes/icones';
+import { IconeCheck, IconeCronometro, IconeHaltere, IconeInformacao, IconePdf, IconeSincronizar } from '../../componentes/icones';
 import { ServicoArmazenamento } from '../../servicos/armazenamento';
 import { GeradorPdfTreino } from '../../servicos/geradorPdfTreino';
 import { UsuarioAluno } from '../../tipos';
@@ -13,9 +13,50 @@ interface PropriedadesPainelAluno {
 export const PainelAluno: React.FC<PropriedadesPainelAluno> = ({ aluno, aoAtualizarAluno }) => {
   const [abaInterna, setAbaInterna] = useState<'treino' | 'anamnese'>('treino');
   const ficha = aluno.fichaAtiva;
-  const [divisaoAtivaId, setDivisaoAtivaId] = useState<string>(ficha?.divisoes[0]?.id || '');
+  const [divisaoAtivaId, setDivisaoAtivaId] = useState<string>(ficha?.divisoes?.[0]?.id || '');
   const [tempoDescansoAtivo, setTempoDescansoAtivo] = useState<number>(60);
   const [mostrarCronometro, setMostrarCronometro] = useState<boolean>(true);
+  const [sincronizandoFicha, setSincronizandoFicha] = useState<boolean>(false);
+
+  // Recarregar ficha remota atualizada da VPS
+  const recarregarFicha = useCallback(async () => {
+    setSincronizandoFicha(true);
+    try {
+      await ServicoArmazenamento.sincronizarAlunosRemoto();
+      const alunoAtualizado = ServicoArmazenamento.obterAlunoPorId(aluno.id);
+      if (alunoAtualizado) {
+        aoAtualizarAluno(alunoAtualizado);
+      }
+    } finally {
+      setSincronizandoFicha(false);
+    }
+  }, [aluno.id, aoAtualizarAluno]);
+
+  // Sincronizar automaticamente no carregamento inicial do painel do aluno
+  useEffect(() => {
+    recarregarFicha();
+  }, [recarregarFicha]);
+
+  // Escutar eventos globais de atualização dos alunos
+  useEffect(() => {
+    const tratarAtualizacaoGlobal = () => {
+      const alunoAtualizado = ServicoArmazenamento.obterAlunoPorId(aluno.id);
+      if (alunoAtualizado) {
+        aoAtualizarAluno(alunoAtualizado);
+      }
+    };
+    window.addEventListener('shara:atualizar_alunos', tratarAtualizacaoGlobal);
+    return () => window.removeEventListener('shara:atualizar_alunos', tratarAtualizacaoGlobal);
+  }, [aluno.id, aoAtualizarAluno]);
+
+  // Ajustar divisão ativa caso a ficha seja carregada ou mude
+  useEffect(() => {
+    if (ficha?.divisoes?.length) {
+      if (!divisaoAtivaId || !ficha.divisoes.some((d) => d.id === divisaoAtivaId)) {
+        setDivisaoAtivaId(ficha.divisoes[0].id);
+      }
+    }
+  }, [ficha, divisaoAtivaId]);
 
   // Divisão selecionada
   const divisaoAtual = ficha?.divisoes.find((d) => d.id === divisaoAtivaId) || ficha?.divisoes[0];
@@ -102,6 +143,31 @@ export const PainelAluno: React.FC<PropriedadesPainelAluno> = ({ aluno, aoAtuali
 
         {/* Ações e Alternador de visualização Treino / Anamnese */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <button
+            className="botao-secundario"
+            onClick={recarregarFicha}
+            disabled={sincronizandoFicha}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              padding: '0.38rem 0.75rem',
+              fontSize: '0.78rem',
+              borderRadius: '8px',
+              borderColor: '#28325c',
+              background: '#141930',
+              color: '#38bdf8',
+              fontWeight: 700,
+              cursor: 'pointer'
+            }}
+            title="Sincronizar com a nuvem e buscar atualizações prescritas pela professora Sara"
+          >
+            <span style={{ display: 'inline-block', animation: sincronizandoFicha ? 'spin 1s linear infinite' : 'none' }}>
+              <IconeSincronizar tamanho={15} cor="#38bdf8" />
+            </span>
+            <span>{sincronizandoFicha ? 'Sincronizando...' : 'Atualizar'}</span>
+          </button>
+
           {ficha && ficha.divisoes && ficha.divisoes.length > 0 && (
             <button
               className="botao-secundario"

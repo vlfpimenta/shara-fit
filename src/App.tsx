@@ -47,11 +47,33 @@ export const App: React.FC = () => {
       try {
         await ServicoArmazenamento.verificarStatusProfessora();
         await ServicoArmazenamento.sincronizarAlunosRemoto();
-        window.dispatchEvent(new CustomEvent('shara:atualizar_alunos'));
       } catch (e) {
         console.warn('Sincronização em background falhou:', e);
       }
     })();
+
+    const tratarAtualizacaoGlobal = () => {
+      const sessaoAtual = ServicoArmazenamento.obterSessao();
+      if (sessaoAtual) {
+        if (sessaoAtual.papel === 'aluno') {
+          const alunoRecarregado = ServicoArmazenamento.obterAlunoPorId(sessaoAtual.id);
+          if (alunoRecarregado) {
+            setUsuario(alunoRecarregado);
+          }
+        } else if (sessaoAtual.papel === 'professor') {
+          const simuladoId = localStorage.getItem('shara_ef_simulacao_aluno_id');
+          if (simuladoId) {
+            const simuladoRecarregado = ServicoArmazenamento.obterAlunoPorId(simuladoId);
+            if (simuladoRecarregado) setAlunoSimulado(simuladoRecarregado);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('shara:atualizar_alunos', tratarAtualizacaoGlobal);
+    return () => {
+      window.removeEventListener('shara:atualizar_alunos', tratarAtualizacaoGlobal);
+    };
   }, []);
 
   // Interceptador global do botão "Voltar" (Hardware Android / Navegador)

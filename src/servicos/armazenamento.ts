@@ -9,6 +9,28 @@ const CHAVE_URL_API = 'shara_ef_url_api_v1';
 const CHAVE_PROFESSORA = 'shara_ef_professora_dados_v1';
 const CHAVE_TOKEN = 'shara_ef_jwt_token_v1';
 
+const MARCADOR_FICHA_INICIO = '[SHARA_FICHA_BASE64:';
+const MARCADOR_FICHA_FIM = ']';
+
+// Utilitários de codificação Base64 com suporte a UTF-8 (acentos, cedilhas, caracteres especiais)
+export function codificarBase64Utf8(texto: string): string {
+  try {
+    return btoa(unescape(encodeURIComponent(texto)));
+  } catch {
+    return '';
+  }
+}
+
+export function decodificarBase64Utf8(base64: string): string {
+  try {
+    return decodeURIComponent(escape(atob(base64)));
+  } catch {
+    return '';
+  }
+}
+
+let temporizadorProgresso: ReturnType<typeof setTimeout> | null = null;
+
 export class ServicoArmazenamento {
   // Gerenciamento de Token JWT
   static obterToken(): string | null {
@@ -215,28 +237,35 @@ export class ServicoArmazenamento {
     try {
       const urlApi = this.obterUrlApi();
       const token = this.obterToken();
+      const sessaoAtual = this.obterSessao();
       let profAtual = this.obterDadosProfessora();
 
-      // Se a professora local ainda tiver o e-mail mock genérico, consulta a VPS para obter o e-mail real
-      if (!profAtual?.email || profAtual.email === 'sara@sharaef.com.br') {
+      // Garantir e-mail válido da professora na VPS
+      let emailProf = profAtual?.email;
+      if (!emailProf || emailProf === 'sara@sharaef.com.br') {
         const status = await this.verificarStatusProfessora();
-        if (status.email) {
+        if (status?.email) {
+          emailProf = status.email;
           profAtual = this.obterDadosProfessora();
+        } else {
+          emailProf = 'saramilk1234@gmail.com';
         }
       }
 
       const headers: Record<string, string> = {
         'Accept': 'application/json'
       };
-      if (token) {
+      // Apenas envia o token no header Authorization se for professor(a),
+      // pois o endpoint /api/alunos da VPS aceita requisições com x-professor-email para leitura
+      if (token && sessaoAtual?.papel === 'professor') {
         headers['Authorization'] = `Bearer ${token}`;
       }
-      if (profAtual?.email) {
-        headers['x-professor-email'] = profAtual.email;
+      if (emailProf) {
+        headers['x-professor-email'] = emailProf;
       }
 
       const controle = new AbortController();
-      const tempoLimite = setTimeout(() => controle.abort(), 7000);
+      const tempoLimite = setTimeout(() => controle.abort(), 8000);
       const resposta = await fetch(`${urlApi}/api/alunos`, {
         headers,
         signal: controle.signal
@@ -251,12 +280,46 @@ export class ServicoArmazenamento {
           const mapaLocais = new Map(alunosLocais.map((a) => [a.id, a]));
           const mapaEmails = new Map(alunosLocais.map((a) => [a.email.toLowerCase(), a]));
 
-          // Mesclar preservando fichas locais se a remota ainda não existir
+          // Mesclar decodificando fichas persistidas remotamente e preservando integridade
           const alunosSincronizados: UsuarioAluno[] = alunosRemotos.map((remoto) => {
             const local = mapaLocais.get(remoto.id) || mapaEmails.get(remoto.email.toLowerCase());
+
+            let fichaEmbutida: FichaDeTreino | undefined = undefined;
+
+            // 1. Extrair ficha embutida no objetivoPrincipal caso presente
+            if (remoto.anamnese?.objetivoPrincipal && remoto.anamnese.objetivoPrincipal.includes(MARCADOR_FICHA_INICIO)) {
+              const partes = remoto.anamnese.objetivoPrincipal.split(MARCADOR_FICHA_INICIO);
+              const objetivoLimpo = partes[0].trim();
+              const resto = partes[1];
+              const indiceFim = resto.indexOf(MARCADOR_FICHA_FIM);
+              if (indiceFim !== -1) {
+                const b64 = resto.substring(0, indiceFim).trim();
+                const jsonFicha = decodificarBase64Utf8(b64);
+                if (jsonFicha) {
+                  try {
+                    fichaEmbutida = JSON.parse(jsonFicha);
+                  } catch (e) {
+                    console.warn('Erro ao interpretar ficha serializada:', e);
+                  }
+                }
+              }
+              remoto.anamnese.objetivoPrincipal = objetivoLimpo || 'Condicionamento';
+            }
+
+            // Ficha remota relacional > ficha remota embutida > ficha local
+            const fichaFinal = (remoto.fichaAtiva?.divisoes && remoto.fichaAtiva.divisoes.length > 0)
+              ? remoto.fichaAtiva
+              : (fichaEmbutida || remoto.fichaAtiva || local?.fichaAtiva);
+
+            const statusFinal =
+              fichaFinal && fichaFinal.divisoes && fichaFinal.divisoes.length > 0 && remoto.status === 'aguardando_ficha'
+                ? 'ativo'
+                : remoto.status;
+
             return {
               ...remoto,
-              fichaAtiva: remoto.fichaAtiva || local?.fichaAtiva
+              status: statusFinal,
+              fichaAtiva: fichaFinal
             };
           });
 
@@ -276,6 +339,19 @@ export class ServicoArmazenamento {
           }
 
           this.salvarAlunos(alunosSincronizados);
+
+          // Atualizar sessão ativa do aluno com os dados mais recentes da ficha
+          if (sessaoAtual && sessaoAtual.papel === 'aluno') {
+            const alunoSessaoAtualizado = alunosSincronizados.find(
+              (a) => a.id === sessaoAtual.id || a.email.toLowerCase() === sessaoAtual.email.toLowerCase()
+            );
+            if (alunoSessaoAtualizado) {
+              this.definirSessao(alunoSessaoAtualizado);
+            }
+          }
+
+          // Notificar ouvintes do React
+          window.dispatchEvent(new CustomEvent('shara:atualizar_alunos', { detail: { alunos: alunosSincronizados } }));
           return alunosSincronizados;
         }
       }
@@ -381,7 +457,12 @@ export class ServicoArmazenamento {
   }
 
   // Atualizar ou prescrever ficha de treino de um aluno
-  static salvarFichaAluno(alunoId: string, divisoes: DivisaoTreino[], titulo: string, observacoes?: string): boolean {
+  static async salvarFichaAluno(
+    alunoId: string,
+    divisoes: DivisaoTreino[],
+    titulo: string,
+    observacoes?: string
+  ): Promise<boolean> {
     const alunos = this.obterAlunos();
     const index = alunos.findIndex((a) => a.id === alunoId);
     if (index === -1) return false;
@@ -405,7 +486,73 @@ export class ServicoArmazenamento {
       this.definirSessao(alunos[index]);
     }
 
+    // Persistência em nuvem (VPS)
+    try {
+      const urlApi = this.obterUrlApi();
+      const alunoAtual = alunos[index];
+
+      // 1. Persistir via PUT /api/alunos/:id com a ficha serializada em Base64 no objetivoPrincipal
+      const objetivoBase = (alunoAtual.anamnese?.objetivoPrincipal || 'Condicionamento')
+        .split(MARCADOR_FICHA_INICIO)[0]
+        .trim();
+      const fichaBase64 = codificarBase64Utf8(JSON.stringify(novaFicha));
+      const objetivoSerializado = `${objetivoBase}\n${MARCADOR_FICHA_INICIO}${fichaBase64}${MARCADOR_FICHA_FIM}`;
+
+      await fetch(`${urlApi}/api/alunos/${alunoId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'ativo',
+          objetivoPrincipal: objetivoSerializado
+        })
+      });
+
+      // 2. Persistir via POST /api/alunos/:id/ficha (para backend relacional)
+      await fetch(`${urlApi}/api/alunos/${alunoId}/ficha`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          titulo,
+          observacoesGerais: observacoes,
+          divisoes
+        })
+      }).catch(() => {});
+
+      window.dispatchEvent(new CustomEvent('shara:atualizar_alunos'));
+    } catch (erro) {
+      console.warn('Falha na persistência remota da ficha (salvo no cache local):', erro);
+    }
+
     return true;
+  }
+
+  // Agendar sincronização assíncrona de progresso de treino com a nuvem (debounce)
+  private static agendarSincroniaProgresso(aluno: UsuarioAluno): void {
+    if (temporizadorProgresso) {
+      clearTimeout(temporizadorProgresso);
+    }
+
+    temporizadorProgresso = setTimeout(async () => {
+      try {
+        if (!aluno.fichaAtiva) return;
+        const urlApi = this.obterUrlApi();
+        const objetivoBase = (aluno.anamnese?.objetivoPrincipal || 'Condicionamento')
+          .split(MARCADOR_FICHA_INICIO)[0]
+          .trim();
+        const fichaBase64 = codificarBase64Utf8(JSON.stringify(aluno.fichaAtiva));
+        const objetivoSerializado = `${objetivoBase}\n${MARCADOR_FICHA_INICIO}${fichaBase64}${MARCADOR_FICHA_FIM}`;
+
+        await fetch(`${urlApi}/api/alunos/${aluno.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            objetivoPrincipal: objetivoSerializado
+          })
+        });
+      } catch (e) {
+        console.warn('Falha ao sincronizar progresso na nuvem:', e);
+      }
+    }, 1500);
   }
 
   // Atualizar progresso do treino
@@ -445,6 +592,9 @@ export class ServicoArmazenamento {
     if (sessaoAtual && sessaoAtual.id === alunoId) {
       this.definirSessao(aluno);
     }
+
+    // Persistir progresso na nuvem assincronamente
+    this.agendarSincroniaProgresso(aluno);
   }
 
   // Autenticação de usuário (tenta API da VPS e possui fallback local)

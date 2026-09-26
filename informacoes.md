@@ -112,10 +112,17 @@ shara-fit/
 - [x] Correção de carregamento e sincronização com a VPS no Desktop: persistência automática dos dados reais da professora retornados pelo backend (`saramilk1234@gmail.com`), envio correto de headers de autorização sem fallback genérico incorreto, expurgo de mocks estáticos de teste caso a VPS possua alunos reais e disparo automático de sincronização remota na inicialização do aplicativo (`App.tsx`) e na montagem do painel (`PainelProfessor.tsx`).
 - [x] Opção para o aluno gerar e salvar PDF da ficha completa de treinos (`GeradorPdfTreino.ts`), formatado em layout profissional A4 com cabeçalho oficial, dados do aluno, métricas, divisões organizadas e orientações da professora Sara, 100% offline e sem dependências externas.
 - [x] Ocultação automática de badges de tempo de descanso nos exercícios (`.badge-tempo-descanso`) e do cronômetro flutuante no modo desktop (`@media (min-width: 769px)`), mantendo-os ativos exclusivamente no mobile.
+- [x] Sincronização exaustiva e bidirecional de fichas de treino entre mobile e desktop:
+  - Identificação e correção da causa raiz: `salvarFichaAluno` gravava a ficha apenas no `localStorage` do computador da professora sem persistir na VPS, e o endpoint `/api/alunos` rejeitava tokens com papel `aluno` via `jwtVerify()`, impedindo o celular de receber treinos novos.
+  - Implementação de persistência em tempo real via `PUT /api/alunos/:id` com ficha serializada em Base64 UTF-8 seguro (`[SHARA_FICHA_BASE64:...]`) no campo `objetivo_principal`, com decodificação transparente e sem poluição textual.
+  - Implementação de persistência relacional com o novo endpoint `POST /api/alunos/:id/ficha` e subquery PostgreSQL com `json_agg` e `json_build_object` em `GET /api/alunos` para divisões e exercícios.
+  - Sincronização automática na montagem do `PainelAluno` via `useEffect`, ouvinte do evento global `shara:atualizar_alunos` no `App.tsx` e no `PainelAluno`, e botão discreto de atualização manual ("Atualizar") com animação de giro para o aluno recarregar a qualquer instante.
+  - Persistência contínua de anotações de carga e séries concluídas na nuvem com debounce (`agendarSincroniaProgresso`).
 
 ## 5. Diretriz Obrigatória de Versionamento e Deploy Contínuo (CI/CD)
 
 - **Commit e Push Imediato no Frontend**:
   - Qualquer alteração realizada nos arquivos do frontend (`src/`, `public/`, `index.html`, estilos, componentes, documentação, etc.) deve ser **imediatamente commitada e enviada via `git push origin main` para o repositório no GitHub** ([https://github.com/vlfpimenta/shara-fit](https://github.com/vlfpimenta/shara-fit)).
   - Essa diretriz assegura o disparo automático do pipeline de deploy contínuo na Vercel a cada intervenção.
+
 

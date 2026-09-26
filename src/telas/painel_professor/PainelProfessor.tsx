@@ -67,6 +67,7 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
   const [modalBibliotecaAberta, setModalBibliotecaAberta] = useState<boolean>(false);
   const [filtroGrupamento, setFiltroGrupamento] = useState<string>('Todos');
   const [buscaExercicio, setBuscaExercicio] = useState<string>('');
+  const [salvandoFicha, setSalvandoFicha] = useState<boolean>(false);
 
   // Funções de Gestão de Alunos (Editar, Desativar e Excluir)
   const abrirEdicaoAluno = (aluno: UsuarioAluno) => {
@@ -153,17 +154,29 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
     setDivisaoAbertaIndex(0);
   };
 
-  // Salvar ficha no banco
-  const salvarFicha = () => {
+  // Salvar ficha no banco (sincroniza com a VPS e salva localmente)
+  const salvarFicha = async () => {
     if (!alunoParaPrescrever) return;
     if (!tituloFicha.trim()) {
       alert('Por favor, informe o título da ficha.');
       return;
     }
 
-    ServicoArmazenamento.salvarFichaAluno(alunoParaPrescrever.id, divisoesEmEdicao, tituloFicha, observacoesFicha);
-    setAlunos(ServicoArmazenamento.obterAlunos());
-    setAlunoParaPrescrever(null);
+    setSalvandoFicha(true);
+    try {
+      await ServicoArmazenamento.salvarFichaAluno(
+        alunoParaPrescrever.id,
+        divisoesEmEdicao,
+        tituloFicha,
+        observacoesFicha
+      );
+      setAlunos(ServicoArmazenamento.obterAlunos());
+      setAlunoParaPrescrever(null);
+    } catch {
+      alert('Ocorreu um erro ao salvar a ficha. Os dados foram mantidos localmente.');
+    } finally {
+      setSalvandoFicha(false);
+    }
   };
 
   // Adicionar exercício selecionado da biblioteca para a divisão atual
@@ -970,12 +983,20 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
 
             {/* Ações Finais da Prescrição */}
             <div style={{ marginTop: '1.8rem', display: 'flex', justifyContent: 'flex-end', gap: '0.8rem' }}>
-              <button className="botao-secundario" onClick={() => setAlunoParaPrescrever(null)}>
+              <button
+                className="botao-secundario"
+                disabled={salvandoFicha}
+                onClick={() => setAlunoParaPrescrever(null)}
+              >
                 Cancelar
               </button>
-              <button className="botao-primario" onClick={salvarFicha}>
+              <button
+                className="botao-primario"
+                disabled={salvandoFicha}
+                onClick={salvarFicha}
+              >
                 <IconeCheck tamanho={18} />
-                <span>Salvar</span>
+                <span>{salvandoFicha ? 'Salvando...' : 'Salvar'}</span>
               </button>
             </div>
           </div>

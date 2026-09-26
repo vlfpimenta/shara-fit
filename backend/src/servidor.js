@@ -281,12 +281,18 @@ fastify.post('/api/alunos/cadastrar', async (requisicao, resposta) => {
 });
 
 // 4. Listar Alunos (Área da Professora Sara)
+// 4. Listar Alunos (Área da Professora e Consulta de Aluno)
 fastify.get('/api/alunos', async (requisicao, resposta) => {
   let autorizado = false;
+  let usuarioIdFiltro = null;
+
   try {
     await requisicao.jwtVerify();
-    if (requisicao.user?.papel === 'professor') {
+    if (requisicao.user) {
       autorizado = true;
+      if (requisicao.user.papel === 'aluno') {
+        usuarioIdFiltro = requisicao.user.id;
+      }
     }
   } catch {
     const emailHeader = requisicao.headers['x-professor-email'];
@@ -305,26 +311,65 @@ fastify.get('/api/alunos', async (requisicao, resposta) => {
   }
 
   if (!autorizado) {
-    return resposta.status(401).send({ sucesso: false, mensagem: 'Acesso restrito à Professora Sara.' });
+    return resposta.status(401).send({ sucesso: false, mensagem: 'Acesso restrito à Professora Sara e alunos cadastrados.' });
   }
 
   const cliente = await pool.connect();
   try {
+    const filtroQuery = usuarioIdFiltro ? 'AND u.id = $1' : '';
+    const parametros = usuarioIdFiltro ? [usuarioIdFiltro] : [];
+
     const resultado = await cliente.query(`
       SELECT 
         u.id, u.papel, u.nome, u.email, u.data_cadastro, u.status,
         row_to_json(a.*) as anamnese,
         (
-          SELECT row_to_json(f.*)
+          SELECT json_build_object(
+            'id', f.id,
+            'alunoId', f.aluno_id,
+            'titulo', f.titulo,
+            'observacoesGerais', f.observacoes_gerais,
+            'dataCriacao', f.data_criacao,
+            'ativa', f.ativa,
+            'divisoes', COALESCE((
+              SELECT json_agg(json_build_object(
+                'id', d.id,
+                'fichaId', d.ficha_id,
+                'identificador', d.identificador,
+                'titulo', d.titulo,
+                'frequenciaSugerida', d.frequencia_sugerida,
+                'ordem', d.ordem,
+                'exercicios', COALESCE((
+                  SELECT json_agg(json_build_object(
+                    'id', e.id,
+                    'nome', e.nome,
+                    'grupamento', e.grupamento,
+                    'series', e.series,
+                    'repeticoes', e.repeticoes,
+                    'cargaKg', e.carga_kg,
+                    'intervaloSegundos', e.intervalo_segundos,
+                    'observacoes', e.observacoes,
+                    'ordem', e.ordem,
+                    'seriesConcluidas', e.series_concluidas,
+                    'cargasRegistradas', e.cargas_registradas
+                  ) ORDER BY e.ordem ASC)
+                  FROM exercicios_divisao e
+                  WHERE e.divisao_id = d.id
+                ), '[]'::jsonb)
+              ) ORDER BY d.ordem ASC)
+              FROM divisoes_treino d
+              WHERE d.ficha_id = f.id
+            ), '[]'::jsonb)
+          )
           FROM fichas_treino f
           WHERE f.aluno_id = u.id AND f.ativa = true
           LIMIT 1
         ) as ficha_ativa
       FROM usuarios u
       LEFT JOIN anamneses a ON a.usuario_id = u.id
-      WHERE u.papel = 'aluno'
+      WHERE u.papel = 'aluno' ${filtroQuery}
       ORDER BY u.data_cadastro DESC
-    `);
+    `, parametros);
 
     const formatarData = (d) => {
       if (!d) return new Date().toISOString().split('T')[0];
@@ -370,6 +415,80 @@ fastify.get('/api/alunos', async (requisicao, resposta) => {
     });
 
     return { sucesso: true, alunos };
+  } finally {
+    cliente.release();
+  }
+});
+
+// 4.1 Salvar / Prescrever Ficha de Treino do Aluno
+fastify.post('/api/alunos/:id/ficha', async (requisicao, resposta) => {
+  const { id: alunoId } = requisicao.params;
+  const { titulo, observacoesGerais, divisoes } = requisicao.body || {};
+
+  if (!titulo || !Array.isArray(divisoes)) {
+    return resposta.status(400).send({ sucesso: false, mensagem: 'Dados da ficha incompletos.' });
+  }
+
+  const cliente = await pool.connect();
+  try {
+    await cliente.query('BEGIN');
+
+    // Desativar fichas anteriores
+    await cliente.query('UPDATE fichas_treino SET ativa = false WHERE aluno_id = $1', [alunoId]);
+
+    // Criar nova ficha
+    const fichaId = 'ficha-' + Date.now();
+    await cliente.query(`
+      INSERT INTO fichas_treino (id, aluno_id, titulo, observacoes_gerais, data_criacao, ativa)
+      VALUES ($1, $2, $3, $4, CURRENT_DATE, true)
+    `, [fichaId, alunoId, titulo.trim(), observacoesGerais || null]);
+
+    // Inserir divisões e exercícios
+    for (let i = 0; i < divisoes.length; i++) {
+      const div = divisoes[i];
+      const divId = div.id || ('div-' + Date.now() + '-' + i);
+
+      await cliente.query(`
+        INSERT INTO divisoes_treino (id, ficha_id, identificador, titulo, frequencia_sugerida, ordem)
+        VALUES ($1, $2, $3, $4, $5, $6)
+      `, [divId, fichaId, div.identificador || `Treino ${String.fromCharCode(65 + i)}`, div.titulo || '', div.frequenciaSugerida || null, i]);
+
+      if (Array.isArray(div.exercicios)) {
+        for (let j = 0; j < div.exercicios.length; j++) {
+          const ex = div.exercicios[j];
+          const exId = ex.id || ('ex-' + Date.now() + '-' + j);
+
+          await cliente.query(`
+            INSERT INTO exercicios_divisao (
+              id, divisao_id, nome, grupamento, series, repeticoes, carga_kg, intervalo_segundos, observacoes, ordem, series_concluidas, cargas_registradas
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+          `, [
+            exId,
+            divId,
+            ex.nome || '',
+            ex.grupamento || 'Geral',
+            ex.series || 3,
+            ex.repeticoes || '10 a 12',
+            ex.cargaKg || '',
+            ex.intervaloSegundos || 60,
+            ex.observacoes || null,
+            j,
+            JSON.stringify(ex.seriesConcluidas || []),
+            JSON.stringify(ex.cargasRegistradas || [])
+          ]);
+        }
+      }
+    }
+
+    // Atualizar status do aluno para ativo
+    await cliente.query("UPDATE usuarios SET status = 'ativo' WHERE id = $1 AND papel = 'aluno'", [alunoId]);
+
+    await cliente.query('COMMIT');
+    return { sucesso: true, mensagem: 'Ficha de treino persistida com sucesso!', fichaId };
+  } catch (erro) {
+    await cliente.query('ROLLBACK');
+    fastify.log.error(erro);
+    return resposta.status(500).send({ sucesso: false, mensagem: 'Erro ao persistir ficha de treino.' });
   } finally {
     cliente.release();
   }
