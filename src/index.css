@@ -871,3 +871,37 @@ body::after {
     padding: 0.12rem 0.4rem;
   }
 }
+
+/* ==========================================================================
+   Homepage / Apresentação - Preservação da Escala Ampla e Imponente
+   ========================================================================== */
+.homepage-apresentacao {
+  font-size: 16px;
+}
+
+.homepage-apresentacao .cartao {
+  padding: 1.4rem 1.6rem;
+}
+
+.homepage-apresentacao .badge {
+  font-size: 0.78rem;
+  padding: 0.35rem 0.8rem;
+  letter-spacing: 0.3px;
+}
+
+.homepage-apresentacao .botao-primario,
+.homepage-apresentacao .botao-secundario {
+  min-height: 48px;
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: var(--raio-borda-md);
+}
+
+@media (max-width: 640px) {
+  .homepage-apresentacao .botao-primario,
+  .homepage-apresentacao .botao-secundario {
+    min-height: 46px;
+    font-size: 0.95rem;
+    padding: 0.8rem 1.4rem;
+  }
+}

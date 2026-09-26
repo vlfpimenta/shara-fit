@@ -95,6 +95,7 @@ shara-fit/
 - [x] Remoção do botão de cadeado do cabeçalho e da aba "Área da Professora" no modal de login de aluno. Criação do modal dedicado `ModalLoginProfessor.tsx`, acessado diretamente ao clicar no logo da VLFP Info no rodapé.
 - [x] Correção do link de privacidade na anamnese com o novo componente `ModalPrivacidade.tsx`, contendo botão de fechar acessível e visual integrado para evitar travamento em PWA standalone.
 - [x] Implementação de suporte nativo ao botão "Voltar" (Hardware Android / Navegador) via History API (`pushState` e `popstate`), permitindo retroceder entre etapas da anamnese, fechar modais e sair do modo simulado sem fechar o aplicativo.
+- [x] Restauração da escala ampla e imponente exclusiva da homepage (`.homepage-apresentacao` com base de 16px, botões hero de 46-48px, tipografia fluida e fotos originais), mantendo a escala compacta ergonômica (MiniBOM) nas telas internas de treino, cadastro e painel.
 
 ## 5. Diretriz Obrigatória de Versionamento e Deploy Contínuo (CI/CD)
 
