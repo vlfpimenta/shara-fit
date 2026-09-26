@@ -25,27 +25,13 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
   const [alunoSelecionadoAnamnese, setAlunoSelecionadoAnamnese] = useState<UsuarioAluno | null>(null);
   const [alunoParaPrescrever, setAlunoParaPrescrever] = useState<UsuarioAluno | null>(null);
 
-  // Estados de Sincronização com VPS
-  const [sincronizandoAlunos, setSincronizandoAlunos] = useState<boolean>(false);
-  const [mensagemSincronizacao, setMensagemSincronizacao] = useState<string>('');
-
-  const sincronizarAlunos = async () => {
-    setSincronizandoAlunos(true);
-    try {
-      const listaAtualizada = await ServicoArmazenamento.sincronizarAlunosRemoto();
-      setAlunos(listaAtualizada);
-      const agora = new Date();
-      const horaStr = `${String(agora.getHours()).padStart(2, '0')}:${String(agora.getMinutes()).padStart(2, '0')}`;
-      setMensagemSincronizacao(`Atualizado às ${horaStr}`);
-    } catch {
-      setMensagemSincronizacao('Modo offline');
-    } finally {
-      setSincronizandoAlunos(false);
-    }
-  };
-
+  // Atualização reativa de alunos quando disparado externamente (ex: pelo menu do cabeçalho)
   useEffect(() => {
-    sincronizarAlunos();
+    const recarregar = () => {
+      setAlunos(ServicoArmazenamento.obterAlunos());
+    };
+    window.addEventListener('shara:atualizar_alunos', recarregar);
+    return () => window.removeEventListener('shara:atualizar_alunos', recarregar);
   }, []);
 
   // Estados de Gestão de Aluno (Editar, Desativar e Excluir)
@@ -71,26 +57,6 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
   const [modalBibliotecaAberta, setModalBibliotecaAberta] = useState<boolean>(false);
   const [filtroGrupamento, setFiltroGrupamento] = useState<string>('Todos');
   const [buscaExercicio, setBuscaExercicio] = useState<string>('');
-
-  // Configuração do Domínio da VPS
-  const [modalConfigApiAberta, setModalConfigApiAberta] = useState<boolean>(false);
-  const [urlApiInput, setUrlApiInput] = useState<string>(() => ServicoArmazenamento.obterUrlApi());
-  const [resultadoTesteApi, setResultadoTesteApi] = useState<{ sucesso: boolean; mensagem: string; detalhe?: string } | null>(null);
-  const [testandoApi, setTestandoApi] = useState<boolean>(false);
-
-  const testarConexao = async () => {
-    setTestandoApi(true);
-    setResultadoTesteApi(null);
-    const res = await ServicoArmazenamento.testarConexaoApi(urlApiInput);
-    setResultadoTesteApi(res);
-    setTestandoApi(false);
-  };
-
-  const salvarNovoDominio = () => {
-    ServicoArmazenamento.definirUrlApi(urlApiInput);
-    alert('Domínio da API salvo com sucesso!');
-    setModalConfigApiAberta(false);
-  };
 
   // Funções de Gestão de Alunos (Editar, Desativar e Excluir)
   const abrirEdicaoAluno = (aluno: UsuarioAluno) => {
@@ -219,6 +185,20 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
     setDivisoesEmEdicao(novas);
   };
 
+  // Remover divisão de treino (Treino A, Treino B, etc.)
+  const removerDivisao = (divIndex: number) => {
+    if (divisoesEmEdicao.length <= 1) {
+      alert('A ficha deve possuir pelo menos uma divisão de treino.');
+      return;
+    }
+    const divAlvo = divisoesEmEdicao[divIndex];
+    if (window.confirm(`Deseja realmente remover o ${divAlvo.identificador}?`)) {
+      const novas = divisoesEmEdicao.filter((_, idx) => idx !== divIndex);
+      setDivisoesEmEdicao(novas);
+      setDivisaoAbertaIndex(0);
+    }
+  };
+
   // Adicionar nova divisão (Treino C, D...)
   const adicionarNovaDivisao = () => {
     const letras = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -242,7 +222,7 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', paddingBottom: '3.5rem' }}>
-      {/* Cabeçalho do Painel da Sara */}
+      {/* Cabeçalho do Painel da Sara (despoluído, atalhos integrados ao menu do topo) */}
       <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.15rem' }}>
@@ -251,48 +231,11 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem', flexWrap: 'wrap' }}>
             <h1 style={{ fontSize: '1.25rem', color: '#ffffff', fontWeight: 800 }}>Painel de Gestão dos Alunos</h1>
-            <button
-              className="botao-secundario"
-              onClick={() => {
-                setUrlApiInput(ServicoArmazenamento.obterUrlApi());
-                setResultadoTesteApi(null);
-                setModalConfigApiAberta(true);
-              }}
-              style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem', borderRadius: '7px' }}
-              title="Configurar domínio da VPS / API"
-            >
-              ⚙️ Configurar VPS / Domínio
-            </button>
             <BotaoInstalarApp
               variante="secundario"
-              texto="📱 Instalar App no Telefone"
+              texto="📱 Instalar App"
               estilo={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem', borderRadius: '7px' }}
             />
-            <button
-              className="botao-secundario"
-              onClick={sincronizarAlunos}
-              disabled={sincronizandoAlunos}
-              style={{
-                padding: '0.25rem 0.6rem',
-                fontSize: '0.75rem',
-                borderRadius: '7px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.35rem',
-                opacity: sincronizandoAlunos ? 0.7 : 1
-              }}
-              title="Sincronizar lista com o banco de dados na VPS"
-            >
-              <span style={{ display: 'inline-block', animation: sincronizandoAlunos ? 'spin 1s infinite linear' : 'none' }}>
-                🔄
-              </span>
-              <span>{sincronizandoAlunos ? 'Sincronizando...' : 'Sincronizar'}</span>
-            </button>
-            {mensagemSincronizacao && (
-              <span style={{ fontSize: '0.72rem', color: '#94a3b8', alignSelf: 'center' }}>
-                {mensagemSincronizacao}
-              </span>
-            )}
           </div>
         </div>
 
@@ -405,8 +348,8 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
                     </td>
 
                     <td style={{ padding: '0.65rem 0.85rem', textAlign: 'right' }}>
-                      <div style={{ display: 'inline-flex', gap: '0.35rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                        {/* Prescrever / Editar Treino */}
+                      <div style={{ display: 'inline-flex', gap: '0.35rem', alignItems: 'center', justifyContent: 'flex-end' }}>
+                        {/* 1. Editar Treino */}
                         <button
                           className="botao-primario"
                           onClick={() => iniciarPrescricao(aluno)}
@@ -414,103 +357,89 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
                           title="Montar ou alterar ficha de treinos"
                         >
                           <IconeEditar tamanho={13} />
-                          <span>{aluno.fichaAtiva ? 'Treino' : 'Prescrever'}</span>
+                          <span>Editar Treino</span>
                         </button>
 
-                        {/* Editar Aluno */}
+                        {/* 2. Anamnese */}
                         <button
                           className="botao-secundario"
-                          onClick={() => abrirEdicaoAluno(aluno)}
-                          style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }}
-                          title="Editar dados cadastrais do aluno"
+                          onClick={() => setAlunoSelecionadoAnamnese(aluno)}
+                          style={{ padding: '0.3rem 0.65rem', fontSize: '0.75rem' }}
+                          title="Ver respostas completas da anamnese"
                         >
-                          <IconeEditar tamanho={13} />
-                          <span>Editar</span>
+                          <IconeInformacao tamanho={13} />
+                          <span>Anamnese</span>
                         </button>
 
-                        {/* Desativar / Reativar Acesso */}
-                        <button
-                          onClick={() => alternarStatusAluno(aluno)}
-                          style={{
-                            background: aluno.status === 'inativo' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
-                            border: aluno.status === 'inativo' ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(245, 158, 11, 0.4)',
-                            color: aluno.status === 'inativo' ? '#6ee7b7' : '#fcd34d',
-                            padding: '0.3rem 0.6rem',
-                            borderRadius: '7px',
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.25rem'
-                          }}
-                          title={aluno.status === 'inativo' ? 'Reativar acesso do aluno' : 'Desativar acesso do aluno temporariamente'}
-                        >
-                          {aluno.status === 'inativo' ? (
-                            <>
-                              <IconeDesbloquear tamanho={13} />
-                              <span>Reativar</span>
-                            </>
-                          ) : (
-                            <>
-                              <IconeBloquear tamanho={13} />
-                              <span>Desativar</span>
-                            </>
-                          )}
-                        </button>
-
-                        {/* Excluir Aluno */}
-                        <button
-                          onClick={() => setAlunoParaExcluir(aluno)}
-                          style={{
-                            background: 'rgba(239, 68, 68, 0.12)',
-                            border: '1px solid rgba(239, 68, 68, 0.35)',
-                            color: '#fca5a5',
-                            padding: '0.3rem 0.55rem',
-                            borderRadius: '7px',
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.2rem'
-                          }}
-                          title="Excluir aluno definitivamente"
-                        >
-                          <IconeLixeira tamanho={13} />
-                          <span>Excluir</span>
-                        </button>
-
-                        {/* Modo Aluno */}
+                        {/* 3. Modo Aluno (apenas ícone) */}
                         <button
                           onClick={() => aoAtivarModoAluno(aluno.id)}
                           style={{
                             background: 'rgba(139, 0, 255, 0.15)',
                             border: '1px solid rgba(139, 0, 255, 0.4)',
                             color: '#c084fc',
-                            padding: '0.3rem 0.65rem',
+                            padding: '0.35rem 0.45rem',
                             borderRadius: '7px',
-                            fontSize: '0.75rem',
-                            fontWeight: 700,
                             cursor: 'pointer',
                             display: 'inline-flex',
                             alignItems: 'center',
-                            gap: '0.25rem'
+                            justifyContent: 'center'
                           }}
                           title="Simular visualização idêntica à que o aluno vê no celular"
                         >
-                          <IconeOlho tamanho={13} />
-                          <span>Modo Aluno</span>
+                          <IconeOlho tamanho={14} />
                         </button>
 
-                        {/* Anamnese */}
+                        {/* 4. Editar Aluno (apenas ícone) */}
                         <button
                           className="botao-secundario"
-                          onClick={() => setAlunoSelecionadoAnamnese(aluno)}
-                          style={{ padding: '0.3rem 0.55rem', fontSize: '0.75rem' }}
-                          title="Ver respostas completas da anamnese"
+                          onClick={() => abrirEdicaoAluno(aluno)}
+                          style={{ padding: '0.35rem 0.45rem', borderRadius: '7px' }}
+                          title="Editar dados cadastrais do aluno"
                         >
-                          <IconeInformacao tamanho={13} />
+                          <IconeEditar tamanho={14} />
+                        </button>
+
+                        {/* 5. Desativar / Reativar Acesso (apenas ícone) */}
+                        <button
+                          onClick={() => alternarStatusAluno(aluno)}
+                          style={{
+                            background: aluno.status === 'inativo' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                            border: aluno.status === 'inativo' ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(245, 158, 11, 0.4)',
+                            color: aluno.status === 'inativo' ? '#6ee7b7' : '#fcd34d',
+                            padding: '0.35rem 0.45rem',
+                            borderRadius: '7px',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          title={aluno.status === 'inativo' ? 'Reativar acesso do aluno' : 'Desativar acesso temporariamente'}
+                        >
+                          {aluno.status === 'inativo' ? (
+                            <IconeDesbloquear tamanho={14} />
+                          ) : (
+                            <IconeBloquear tamanho={14} />
+                          )}
+                        </button>
+
+                        {/* 6. Excluir Aluno (apenas ícone) */}
+                        <button
+                          onClick={() => setAlunoParaExcluir(aluno)}
+                          style={{
+                            background: 'rgba(239, 68, 68, 0.12)',
+                            border: '1px solid rgba(239, 68, 68, 0.35)',
+                            color: '#fca5a5',
+                            padding: '0.35rem 0.45rem',
+                            borderRadius: '7px',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          title="Excluir aluno definitivamente"
+                        >
+                          <IconeLixeira tamanho={14} />
                         </button>
                       </div>
                     </td>
@@ -573,106 +502,96 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
                   </div>
                 </div>
 
-                {/* Grade de Ações Mobile */}
-                <div className="card-aluno-mobile-acoes">
-                  <button
-                    className="botao-primario"
-                    onClick={() => iniciarPrescricao(aluno)}
-                    style={{ padding: '0.45rem 0.6rem', fontSize: '0.8rem', justifyContent: 'center' }}
-                  >
-                    <IconeEditar tamanho={14} />
-                    <span>{aluno.fichaAtiva ? 'Treino' : 'Prescrever'}</span>
-                  </button>
+                {/* Grade de Ações Mobile: apenas Editar Treino e Anamnese com texto; demais apenas ícone */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', marginTop: '0.75rem', borderTop: '1px solid #1c2344', paddingTop: '0.65rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                    <button
+                      className="botao-primario"
+                      onClick={() => iniciarPrescricao(aluno)}
+                      style={{ padding: '0.45rem 0.6rem', fontSize: '0.8rem', justifyContent: 'center' }}
+                    >
+                      <IconeEditar tamanho={14} />
+                      <span>Editar Treino</span>
+                    </button>
 
-                  <button
-                    className="botao-secundario"
-                    onClick={() => setAlunoSelecionadoAnamnese(aluno)}
-                    style={{ padding: '0.45rem 0.6rem', fontSize: '0.8rem', justifyContent: 'center' }}
-                  >
-                    <IconeInformacao tamanho={14} />
-                    <span>Anamnese</span>
-                  </button>
+                    <button
+                      className="botao-secundario"
+                      onClick={() => setAlunoSelecionadoAnamnese(aluno)}
+                      style={{ padding: '0.45rem 0.6rem', fontSize: '0.8rem', justifyContent: 'center' }}
+                    >
+                      <IconeInformacao tamanho={14} />
+                      <span>Anamnese</span>
+                    </button>
+                  </div>
 
-                  <button
-                    className="botao-secundario"
-                    onClick={() => abrirEdicaoAluno(aluno)}
-                    style={{ padding: '0.45rem 0.6rem', fontSize: '0.8rem', justifyContent: 'center' }}
-                  >
-                    <IconeEditar tamanho={14} />
-                    <span>Editar</span>
-                  </button>
+                  <div style={{ display: 'flex', gap: '0.45rem', justifyContent: 'flex-end', alignItems: 'center' }}>
+                    <button
+                      onClick={() => aoAtivarModoAluno(aluno.id)}
+                      style={{
+                        background: 'rgba(139, 0, 255, 0.15)',
+                        border: '1px solid rgba(139, 0, 255, 0.4)',
+                        color: '#c084fc',
+                        padding: '0.45rem 0.75rem',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                      title="Modo Aluno (Simulação)"
+                    >
+                      <IconeOlho tamanho={15} />
+                    </button>
 
-                  <button
-                    onClick={() => alternarStatusAluno(aluno)}
-                    style={{
-                      background: aluno.status === 'inativo' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
-                      border: aluno.status === 'inativo' ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(245, 158, 11, 0.4)',
-                      color: aluno.status === 'inativo' ? '#6ee7b7' : '#fcd34d',
-                      padding: '0.45rem 0.6rem',
-                      borderRadius: '8px',
-                      fontSize: '0.8rem',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '0.3rem'
-                    }}
-                  >
-                    {aluno.status === 'inativo' ? (
-                      <>
-                        <IconeDesbloquear tamanho={14} />
-                        <span>Reativar</span>
-                      </>
-                    ) : (
-                      <>
-                        <IconeBloquear tamanho={14} />
-                        <span>Desativar</span>
-                      </>
-                    )}
-                  </button>
+                    <button
+                      className="botao-secundario"
+                      onClick={() => abrirEdicaoAluno(aluno)}
+                      style={{ padding: '0.45rem 0.75rem', borderRadius: '8px' }}
+                      title="Editar dados cadastrais"
+                    >
+                      <IconeEditar tamanho={15} />
+                    </button>
 
-                  <button
-                    onClick={() => aoAtivarModoAluno(aluno.id)}
-                    style={{
-                      background: 'rgba(139, 0, 255, 0.15)',
-                      border: '1px solid rgba(139, 0, 255, 0.4)',
-                      color: '#c084fc',
-                      padding: '0.45rem 0.6rem',
-                      borderRadius: '8px',
-                      fontSize: '0.8rem',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '0.3rem'
-                    }}
-                  >
-                    <IconeOlho tamanho={14} />
-                    <span>Modo Aluno</span>
-                  </button>
+                    <button
+                      onClick={() => alternarStatusAluno(aluno)}
+                      style={{
+                        background: aluno.status === 'inativo' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                        border: aluno.status === 'inativo' ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(245, 158, 11, 0.4)',
+                        color: aluno.status === 'inativo' ? '#6ee7b7' : '#fcd34d',
+                        padding: '0.45rem 0.75rem',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                      title={aluno.status === 'inativo' ? 'Reativar acesso' : 'Desativar acesso'}
+                    >
+                      {aluno.status === 'inativo' ? (
+                        <IconeDesbloquear tamanho={15} />
+                      ) : (
+                        <IconeBloquear tamanho={15} />
+                      )}
+                    </button>
 
-                  <button
-                    onClick={() => setAlunoParaExcluir(aluno)}
-                    style={{
-                      background: 'rgba(239, 68, 68, 0.12)',
-                      border: '1px solid rgba(239, 68, 68, 0.35)',
-                      color: '#fca5a5',
-                      padding: '0.45rem 0.6rem',
-                      borderRadius: '8px',
-                      fontSize: '0.8rem',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '0.25rem'
-                    }}
-                  >
-                    <IconeLixeira tamanho={14} />
-                    <span>Excluir</span>
-                  </button>
+                    <button
+                      onClick={() => setAlunoParaExcluir(aluno)}
+                      style={{
+                        background: 'rgba(239, 68, 68, 0.12)',
+                        border: '1px solid rgba(239, 68, 68, 0.35)',
+                        color: '#fca5a5',
+                        padding: '0.45rem 0.75rem',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                      title="Excluir aluno definitivamente"
+                    >
+                      <IconeLixeira tamanho={15} />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))
@@ -849,25 +768,58 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
               </div>
             </div>
 
-            {/* Abas das Divisões de Treino (Treino A, Treino B...) */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', overflowX: 'auto' }}>
+            {/* Abas das Divisões de Treino (Treino A, Treino B...) com exclusão */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', overflowX: 'auto', paddingBottom: '0.3rem' }}>
               {divisoesEmEdicao.map((div, idx) => (
-                <button
+                <div
                   key={div.id}
-                  onClick={() => setDivisaoAbertaIndex(idx)}
                   style={{
-                    padding: '0.6rem 1rem',
-                    borderRadius: '10px',
-                    border: divisaoAbertaIndex === idx ? '1px solid #ff2e7e' : '1px solid #28325c',
+                    display: 'flex',
+                    alignItems: 'center',
                     background: divisaoAbertaIndex === idx ? 'rgba(255, 46, 126, 0.15)' : '#0e1224',
-                    color: divisaoAbertaIndex === idx ? '#ffffff' : '#94a3b8',
-                    cursor: 'pointer',
-                    fontWeight: 700,
-                    fontSize: '0.85rem'
+                    border: divisaoAbertaIndex === idx ? '1px solid #ff2e7e' : '1px solid #28325c',
+                    borderRadius: '10px',
+                    padding: '0.15rem 0.35rem',
+                    gap: '0.2rem'
                   }}
                 >
-                  {div.identificador} ({div.exercicios.length})
-                </button>
+                  <button
+                    onClick={() => setDivisaoAbertaIndex(idx)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: divisaoAbertaIndex === idx ? '#ffffff' : '#94a3b8',
+                      cursor: 'pointer',
+                      fontWeight: 700,
+                      fontSize: '0.85rem',
+                      padding: '0.45rem 0.6rem'
+                    }}
+                  >
+                    {div.identificador} ({div.exercicios.length})
+                  </button>
+                  {divisoesEmEdicao.length > 1 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removerDivisao(idx);
+                      }}
+                      title={`Excluir ${div.identificador}`}
+                      style={{
+                        background: 'rgba(239, 68, 68, 0.15)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        color: '#f87171',
+                        cursor: 'pointer',
+                        padding: '3px 5px',
+                        borderRadius: '6px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <IconeLixeira tamanho={12} cor="#f87171" />
+                    </button>
+                  )}
+                </div>
               ))}
 
               <button
@@ -1070,7 +1022,7 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
               </button>
               <button className="botao-primario" onClick={salvarFicha}>
                 <IconeCheck tamanho={18} />
-                <span>Salvar e Disponibilizar Ficha ao Aluno</span>
+                <span>Salvar</span>
               </button>
             </div>
           </div>
@@ -1158,98 +1110,6 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
                   </span>
                 </div>
               ))}
-            </div>
-          </div>
-        </div>
-      )}
-      {/* Modal de Configuração do Domínio da API / VPS */}
-      {modalConfigApiAberta && (
-        <div className="overlay-modal" onClick={() => setModalConfigApiAberta(false)}>
-          <div className="conteudo-modal" style={{ maxWidth: '560px' }} onClick={(e) => e.stopPropagation()}>
-            <div className="cabecalho-modal">
-              <div>
-                <span className="badge badge-ciano">Infraestrutura VPS</span>
-                <h3 className="titulo-modal" style={{ marginTop: '0.2rem' }}>
-                  Configuração de Conexão da API
-                </h3>
-              </div>
-              <button
-                onClick={() => setModalConfigApiAberta(false)}
-                style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
-              >
-                <IconeFechar tamanho={20} />
-              </button>
-            </div>
-
-            <p style={{ color: '#94a3b8', fontSize: '0.88rem', marginBottom: '1.2rem', lineHeight: 1.6 }}>
-              O banco de dados e a API estão hospedados na sua VPS em container Docker. Você pode alterar o domínio a qualquer momento abaixo:
-            </p>
-
-            <div className="grupo-campo">
-              <label className="rotulo-campo">Endereço da API (Domínio / Host)</label>
-              <input
-                type="text"
-                className="campo-texto"
-                value={urlApiInput}
-                placeholder="https://matrix.vlfp.com.br"
-                onChange={(e) => {
-                  setUrlApiInput(e.target.value);
-                  setResultadoTesteApi(null);
-                }}
-              />
-              <span style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '0.3rem' }}>
-                Domínio atual configurado: <code>{ServicoArmazenamento.obterUrlApi()}</code>
-              </span>
-            </div>
-
-            {resultadoTesteApi && (
-              <div
-                style={{
-                  background: resultadoTesteApi.sucesso ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                  border: resultadoTesteApi.sucesso ? '1px solid #10b981' : '1px solid #ef4444',
-                  color: resultadoTesteApi.sucesso ? '#6ee7b7' : '#fca5a5',
-                  padding: '0.8rem 1rem',
-                  borderRadius: '10px',
-                  fontSize: '0.88rem',
-                  marginBottom: '1rem'
-                }}
-              >
-                <strong>{resultadoTesteApi.sucesso ? '✅ Sucesso:' : '❌ Erro:'}</strong> {resultadoTesteApi.mensagem}
-                {resultadoTesteApi.detalhe && (
-                  <div style={{ fontSize: '0.8rem', opacity: 0.85, marginTop: '0.3rem' }}>
-                    Detalhe: {resultadoTesteApi.detalhe}
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', gap: '0.8rem', flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                className="botao-secundario"
-                disabled={testandoApi}
-                onClick={testarConexao}
-                style={{ fontSize: '0.85rem' }}
-              >
-                {testandoApi ? 'Testando Conexão...' : '🔍 Testar Conexão Agora'}
-              </button>
-
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button
-                  type="button"
-                  className="botao-secundario"
-                  onClick={() => setModalConfigApiAberta(false)}
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  className="botao-primario"
-                  onClick={salvarNovoDominio}
-                >
-                  Salvar Domínio
-                </button>
-              </div>
             </div>
           </div>
         </div>

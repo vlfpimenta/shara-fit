@@ -133,12 +133,7 @@ export const ModalLoginProfessor: React.FC<PropriedadesModalLoginProfessor> = ({
               <IconeChave tamanho={15} cor="#fff" />
             </div>
             <div>
-              <span className="badge badge-primaria" style={{ fontSize: '0.62rem', marginBottom: '0.1rem' }}>
-                Acesso Administrativo
-              </span>
-              <h3 className="titulo-modal">
-                {modoPrimeiroAcesso ? 'Cadastro da Professora' : 'Painel da Sara'}
-              </h3>
+              <h3 className="titulo-modal">Acesso Administrativo</h3>
             </div>
           </div>
           <button
@@ -261,7 +256,7 @@ export const ModalLoginProfessor: React.FC<PropriedadesModalLoginProfessor> = ({
           /* Formulário de Login Padrão da Professora */
           <form onSubmit={executarLogin} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
             <div className="grupo-campo">
-              <label className="rotulo-campo">E-mail da Sara</label>
+              <label className="rotulo-campo">E-mail</label>
               <input
                 type="email"
                 className="campo-texto"
@@ -278,7 +273,7 @@ export const ModalLoginProfessor: React.FC<PropriedadesModalLoginProfessor> = ({
                 type="password"
                 className="campo-texto"
                 required
-                placeholder="Sua senha de professora"
+                placeholder="Sua senha de acesso"
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
               />
@@ -294,7 +289,7 @@ export const ModalLoginProfessor: React.FC<PropriedadesModalLoginProfessor> = ({
                 background: 'var(--gradiente-primario)'
               }}
             >
-              {carregando ? 'Entrando...' : 'Acessar Painel da Professora'}
+              {carregando ? 'Entrando...' : 'Entrar no Sistema'}
             </button>
           </form>
         )}

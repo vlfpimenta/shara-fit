@@ -42,6 +42,7 @@ shara-fit/
 │   │   ├── cronometro/CronometroDescanso.tsx # Cronômetro estilo mFit com Web Audio API
 │   │   ├── icones/index.tsx         # Conjunto de ícones inline SVG em PT-BR
 │   │   ├── modal_privacidade/ModalPrivacidade.tsx # Modal de privacidade LGPD com botão fechar claro
+│   │   ├── modal_vps/ModalConfigVps.tsx # Modal de configuração e teste de conexão VPS / Domínio
 │   │   └── pwa/BotaoInstalarApp.tsx # Botão inteligente de instalação PWA
 │   ├── dados/
 │   │   └── iniciais.ts              # Biblioteca de exercícios e alunos de demonstração
@@ -97,6 +98,13 @@ shara-fit/
 - [x] Implementação de suporte nativo ao botão "Voltar" (Hardware Android / Navegador) via History API (`pushState` e `popstate`), permitindo retroceder entre etapas da anamnese, fechar modais e sair do modo simulado sem fechar o aplicativo.
 - [x] Restauração da escala ampla e imponente exclusiva da homepage (`.homepage-apresentacao` com base de 16px, botões hero de 46-48px, tipografia fluida e fotos originais), mantendo a escala compacta ergonômica (MiniBOM) nas telas internas de treino, cadastro e painel.
 - [x] Centralização de textos e botões no card Hero da homepage, remoção da badge "Prescrição Sara EF", link de Política de Privacidade reposicionado abaixo do copyright em cor cinza e ativação do login da professora por toque quintuplo (5 cliques) no logo VLFP Info.
+- [x] Remoção da dica visual textual ("Toque mais Xx para acessar"), tornando o acesso administrativo silencioso via 5 toques no logo.
+- [x] Ocultação do rodapé (logo VLFP, política de privacidade e copyright) em todas as áreas logadas (aluno e professora), exibindo-o estritamente na landing page inicial quando deslogado.
+- [x] Modal de login administrativo simplificado para título direto "Acesso Administrativo", sem o texto "Painel da Sara".
+- [x] Simplificação da lista de alunos no painel da professora: apenas "Editar Treino" e "Anamnese" mantêm texto legível; os botões de ação secundária ("Modo Aluno", "Editar", "Desativar/Reativar" e "Excluir") foram convertidos para botões de ícone com tooltips ergonômicos.
+- [x] Criação de menu dropdown suspenso acionado ao clicar no nome de usuário no topo do cabeçalho, agrupando "Sincronizar Alunos", "Configurar VPS / Domínio" e "Sair da Conta".
+- [x] Modularização do `ModalConfigVps.tsx` em componente reutilizável conectado ao cabeçalho.
+- [x] Construtor de treinos atualizado: suporte à exclusão de divisões/treinos adicionados com confirmação prévia e renomeação do botão final para apenas "Salvar".
 
 ## 5. Diretriz Obrigatória de Versionamento e Deploy Contínuo (CI/CD)
 

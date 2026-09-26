@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Cabecalho } from './componentes/cabecalho/Cabecalho';
 import { ModalPrivacidade } from './componentes/modal_privacidade/ModalPrivacidade';
+import { ModalConfigVps } from './componentes/modal_vps/ModalConfigVps';
 import { ServicoArmazenamento } from './servicos/armazenamento';
 import { TelaApresentacao } from './telas/apresentacao/TelaApresentacao';
 import { ModalLogin } from './telas/login/ModalLogin';
@@ -17,6 +18,8 @@ export const App: React.FC = () => {
   const [modalLoginAlunoAberto, setModalLoginAlunoAberto] = useState<boolean>(false);
   const [modalLoginProfessorAberto, setModalLoginProfessorAberto] = useState<boolean>(false);
   const [modalPrivacidadeAberto, setModalPrivacidadeAberto] = useState<boolean>(false);
+  const [modalConfigVpsAberto, setModalConfigVpsAberto] = useState<boolean>(false);
+  const [sincronizandoAlunos, setSincronizandoAlunos] = useState<boolean>(false);
   const [toquesLogo, setToquesLogo] = useState<number>(0);
   const temporizadorToquesRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -203,6 +206,16 @@ export const App: React.FC = () => {
     }
   };
 
+  const executarSincronizacao = async () => {
+    setSincronizandoAlunos(true);
+    try {
+      await ServicoArmazenamento.sincronizarAlunosRemoto();
+      window.dispatchEvent(new CustomEvent('shara:atualizar_alunos'));
+    } finally {
+      setSincronizandoAlunos(false);
+    }
+  };
+
   const irParaInicio = () => {
     if (usuario) {
       setTelaAtual('painel');
@@ -221,6 +234,9 @@ export const App: React.FC = () => {
         aoEncerrarSessao={encerrarSessao}
         aoSairModoSimulacao={desativarModoAluno}
         aoNavegarInicio={irParaInicio}
+        aoAbrirConfigVps={() => setModalConfigVpsAberto(true)}
+        aoSincronizar={executarSincronizacao}
+        sincronizando={sincronizandoAlunos}
       />
 
       {/* Conteúdo Central */}
@@ -285,8 +301,16 @@ export const App: React.FC = () => {
         <ModalPrivacidade aoFechar={fecharModalPrivacidade} />
       )}
 
-      {/* Rodapé LGPD e Marca com Logo VLFP Info (50px de altura) */}
-      {usuario?.papel !== 'aluno' && !alunoSimulado && (
+      {/* Modal de Configuração da VPS / Domínio */}
+      {modalConfigVpsAberto && (
+        <ModalConfigVps
+          aberto={modalConfigVpsAberto}
+          aoFechar={() => setModalConfigVpsAberto(false)}
+        />
+      )}
+
+      {/* Rodapé LGPD e Marca com Logo VLFP Info (exibido apenas na tela inicial deslogada) */}
+      {!usuario && (
         <footer className="rodape-aplicativo">
           <div
             className="rodape-links"
@@ -333,13 +357,6 @@ export const App: React.FC = () => {
                 Desenvolvido por VLFP Info
               </span>
             </div>
-
-            {/* Contador sutil ao tocar no logo para professora */}
-            {toquesLogo >= 2 && (
-              <span style={{ fontSize: '0.72rem', color: '#ff80aa', fontWeight: 600 }}>
-                Toque mais {5 - toquesLogo}x para acessar
-              </span>
-            )}
           </div>
 
           {/* Texto Copyright 2026 Shara-EF */}
