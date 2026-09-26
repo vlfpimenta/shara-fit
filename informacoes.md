@@ -118,6 +118,9 @@ shara-fit/
   - Implementação de persistência relacional com o novo endpoint `POST /api/alunos/:id/ficha` e subquery PostgreSQL com `json_agg` e `json_build_object` em `GET /api/alunos` para divisões e exercícios.
   - Sincronização automática na montagem do `PainelAluno` via `useEffect`, ouvinte do evento global `shara:atualizar_alunos` no `App.tsx` e no `PainelAluno`, e botão discreto de atualização manual ("Atualizar") com animação de giro para o aluno recarregar a qualquer instante.
   - Persistência contínua de anotações de carga e séries concluídas na nuvem com debounce (`agendarSincroniaProgresso`).
+- [x] Seleção ergonômica de frequência sugerida no modal de prescrição/edição de treino:
+  - Substituição do campo de texto livre por checkboxes dinâmicos correspondentes aos dias que o aluno informou como disponíveis na anamnese (`aluno.anamnese.disponibilidadeTreino`).
+  - Ordenação cronológica dos dias (`Segunda` a `Domingo`), formatação automática de texto legível (ex: "Terça e Quinta", "Segunda, Quarta e Sexta") e fallback para todos os dias caso a anamnese não especifique dias.
 
 ## 5. Diretriz Obrigatória de Versionamento e Deploy Contínuo (CI/CD)
 

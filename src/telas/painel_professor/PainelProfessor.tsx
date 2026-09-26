@@ -19,6 +19,8 @@ interface PropriedadesPainelProfessor {
   aoAtivarModoAluno: (alunoId: string) => void;
 }
 
+const DIAS_SEMANA_ORDEM = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+
 export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtivarModoAluno }) => {
   const [alunos, setAlunos] = useState<UsuarioAluno[]>(() => ServicoArmazenamento.obterAlunos());
   const [buscaAluno, setBuscaAluno] = useState<string>('');
@@ -134,19 +136,22 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
     } else {
       setTituloFicha(`Fase 1 - ${aluno.anamnese.objetivoPrincipal.split(' ')[0]}`);
       setObservacoesFicha('Executar com cadência controlada e respeitar os intervalos.');
+      const disponiveis = (aluno.anamnese.disponibilidadeTreino || []).filter((d) => DIAS_SEMANA_ORDEM.includes(d));
+      const diaA = disponiveis[0] || '';
+      const diaB = disponiveis[1] || '';
       setDivisoesEmEdicao([
         {
           id: 'div-' + Date.now() + '-a',
           identificador: 'Treino A',
           titulo: 'Membros Inferiores',
-          frequenciaSugerida: 'Segunda e Quinta',
+          frequenciaSugerida: diaA,
           exercicios: []
         },
         {
           id: 'div-' + Date.now() + '-b',
           identificador: 'Treino B',
           titulo: 'Membros Superiores & Core',
-          frequenciaSugerida: 'Terça e Sexta',
+          frequenciaSugerida: diaB,
           exercicios: []
         }
       ]);
@@ -220,6 +225,35 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
       setDivisoesEmEdicao(novas);
       setDivisaoAbertaIndex(0);
     }
+  };
+
+  // Alternar dia da semana na frequência sugerida da divisão atual
+  const alternarDiaFrequencia = (dia: string) => {
+    const divAtual = divisoesEmEdicao[divisaoAbertaIndex];
+    if (!divAtual) return;
+
+    const frequenciaAtual = divAtual.frequenciaSugerida || '';
+    const diasAtuais = DIAS_SEMANA_ORDEM.filter((d) => frequenciaAtual.includes(d));
+
+    let novosDias: string[];
+    if (diasAtuais.includes(dia)) {
+      novosDias = diasAtuais.filter((d) => d !== dia);
+    } else {
+      novosDias = DIAS_SEMANA_ORDEM.filter((d) => diasAtuais.includes(d) || d === dia);
+    }
+
+    let textoFinal = '';
+    if (novosDias.length === 1) {
+      textoFinal = novosDias[0];
+    } else if (novosDias.length === 2) {
+      textoFinal = `${novosDias[0]} e ${novosDias[1]}`;
+    } else if (novosDias.length > 2) {
+      textoFinal = `${novosDias.slice(0, -1).join(', ')} e ${novosDias[novosDias.length - 1]}`;
+    }
+
+    const novas = [...divisoesEmEdicao];
+    novas[divisaoAbertaIndex].frequenciaSugerida = textoFinal;
+    setDivisoesEmEdicao(novas);
   };
 
   // Adicionar nova divisão (Treino C, D...)
@@ -812,12 +846,13 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
             {/* Configuração da Divisão Selecionada */}
             {divisoesEmEdicao[divisaoAbertaIndex] && (
               <div style={{ background: '#0e1224', padding: '1.2rem', borderRadius: '14px', border: '1px solid #28325c' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.2rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', marginBottom: '1.2rem' }}>
                   <div className="grupo-campo">
                     <label className="rotulo-campo">Nome da Divisão</label>
                     <input
                       type="text"
                       className="campo-texto"
+                      placeholder="Ex: Membros Inferiores & Glúteos"
                       value={divisoesEmEdicao[divisaoAbertaIndex].titulo}
                       onChange={(e) => {
                         const novas = [...divisoesEmEdicao];
@@ -828,18 +863,86 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
                   </div>
 
                   <div className="grupo-campo">
-                    <label className="rotulo-campo">Frequência Sugerida</label>
-                    <input
-                      type="text"
-                      className="campo-texto"
-                      placeholder="Ex: Segunda e Sexta"
-                      value={divisoesEmEdicao[divisaoAbertaIndex].frequenciaSugerida || ''}
-                      onChange={(e) => {
-                        const novas = [...divisoesEmEdicao];
-                        novas[divisaoAbertaIndex].frequenciaSugerida = e.target.value;
-                        setDivisoesEmEdicao(novas);
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.45rem', flexWrap: 'wrap', gap: '0.4rem' }}>
+                      <label className="rotulo-campo" style={{ marginBottom: 0 }}>
+                        Frequência Sugerida (Dias disponíveis do aluno)
+                      </label>
+                      {divisoesEmEdicao[divisaoAbertaIndex].frequenciaSugerida ? (
+                        <span style={{ fontSize: '0.78rem', color: '#38bdf8', fontWeight: 600 }}>
+                          Definido: <strong>{divisoesEmEdicao[divisaoAbertaIndex].frequenciaSugerida}</strong>
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                          Nenhum dia marcado
+                        </span>
+                      )}
+                    </div>
+
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: '0.5rem',
+                        background: '#090c17',
+                        padding: '0.65rem 0.8rem',
+                        borderRadius: '10px',
+                        border: '1px solid #28325c'
                       }}
-                    />
+                    >
+                      {(() => {
+                        const disponiveisAluno = alunoParaPrescrever?.anamnese?.disponibilidadeTreino || [];
+                        const diasParaExibir = disponiveisAluno.length > 0
+                          ? DIAS_SEMANA_ORDEM.filter((d) => disponiveisAluno.includes(d))
+                          : DIAS_SEMANA_ORDEM;
+
+                        if (diasParaExibir.length === 0) {
+                          return (
+                            <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+                              O aluno não informou dias disponíveis na anamnese.
+                            </span>
+                          );
+                        }
+
+                        return diasParaExibir.map((dia) => {
+                          const frequenciaAtual = divisoesEmEdicao[divisaoAbertaIndex]?.frequenciaSugerida || '';
+                          const estaMarcado = frequenciaAtual.includes(dia);
+
+                          return (
+                            <label
+                              key={dia}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.45rem',
+                                padding: '0.45rem 0.85rem',
+                                borderRadius: '8px',
+                                border: estaMarcado ? '1px solid #38bdf8' : '1px solid #1e264a',
+                                background: estaMarcado ? 'rgba(56, 189, 248, 0.18)' : '#11162d',
+                                color: estaMarcado ? '#ffffff' : '#94a3b8',
+                                fontWeight: estaMarcado ? 700 : 500,
+                                fontSize: '0.82rem',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s ease',
+                                userSelect: 'none'
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={estaMarcado}
+                                onChange={() => alternarDiaFrequencia(dia)}
+                                style={{
+                                  width: '16px',
+                                  height: '16px',
+                                  accentColor: '#38bdf8',
+                                  cursor: 'pointer'
+                                }}
+                              />
+                              <span>{dia}</span>
+                            </label>
+                          );
+                        });
+                      })()}
+                    </div>
                   </div>
                 </div>
 
