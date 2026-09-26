@@ -17,6 +17,25 @@ Aplicativo PWA sob medida para a professora **Sara** e seus alunos, com funciona
   - Pelo Painel da Professora Sara: Botão **"⚙️ Configurar VPS / Domínio"** permite alterar o endereço da API e testar a conexão em tempo real sem precisar recompilar o aplicativo.
   - No código / Vercel: Variável de ambiente `VITE_API_URL` configurável em `.env` e nas variáveis de projeto da Vercel.
 
+### ⚠️ REGRA ARQUITETURAL INVIOLÁVEL: OPERAÇÃO 100% EXCLUSIVA NA VPS (SEM DADOS EM LOCALSTORAGE)
+
+> **ATENÇÃO: ESTA REGRA NUNCA DEVE SER SOBREPOSTA OU MODIFICADA EM NENHUMA ATUALIZAÇÃO OU REFATORAÇÃO FUTURA.**
+> 
+> 1. **Fonte Única da Verdade**: O banco de dados PostgreSQL na VPS (`matrix.vlfp.com.br`) é a **ÚNICA** fonte de dados do sistema.
+> 2. **Proibição Absoluta de Dados no localStorage**: É terminantemente proibido persistir, consultar, mesclar ou manter em `localStorage` qualquer dado operacional:
+>    - ❌ NENHUM dado de aluno ou cadastro;
+>    - ❌ NENHUM treino, divisão, exercício ou repetição;
+>    - ❌ NENHUMA ficha de treino prescrita ou histórico;
+>    - ❌ NENHUMA anamnese ou resposta de saúde;
+>    - ❌ NENHUMA senha ou credencial em texto/hash local;
+>    - ❌ NENHUM array de demonstração ou mock offline (`ALUNOS_EXEMPLO`).
+> 3. **Uso Permitido do Navegador**: O `localStorage` é reservado **exclusivamente e estritamente** para:
+>    - `shara_ef_jwt_token_v1`: Token JWT emitido pela VPS para autorização de requisições HTTP;
+>    - `shara_ef_sessao_v1`: Identidade básica da sessão ativa do usuário conectado para manter o estado da interface após recarregamento (F5);
+>    - `shara_ef_url_api_v1`: Endereço da API backend configurado para comunicação com a VPS.
+> 4. **Operações em Tempo Real**: Todas as ações de listagem, consulta, cadastro de alunos, prescrição de treinos, marcação de séries concluídas, anotação de cargas, alteração de status e exclusão são processadas e persistidas **direta e imediatamente via chamadas HTTP (REST) contra a API da VPS**.
+> 5. **Limpeza Ativa**: A rotina de inicialização do aplicativo executa a remoção forçada e permanente de quaisquer chaves legadas de armazenamento local (`shara_ef_alunos_v1`, `shara_ef_credenciais_v1`, etc.).
+
 ## 2. Estrutura de Arquivos
 
 ```text
@@ -121,6 +140,12 @@ shara-fit/
 - [x] Seleção ergonômica de frequência sugerida no modal de prescrição/edição de treino:
   - Substituição do campo de texto livre por checkboxes dinâmicos correspondentes aos dias que o aluno informou como disponíveis na anamnese (`aluno.anamnese.disponibilidadeTreino`).
   - Ordenação cronológica dos dias (`Segunda` a `Domingo`), formatação automática de texto legível (ex: "Terça e Quinta", "Segunda, Quarta e Sexta") e fallback para todos os dias caso a anamnese não especifique dias.
+- [x] Erradicação total de dados operacionais no `localStorage` e operação 100% exclusiva na VPS:
+  - Eliminação de `CHAVE_ALUNOS` e `CHAVE_SENHAS`;
+  - Remoção de qualquer fallback com mocks estáticos offline (`ALUNOS_EXEMPLO`);
+  - Limpeza ativa de resíduos legados de dados locais ao inicializar a aplicação;
+  - Todas as leituras e gravações de alunos, treinos, divisões, exercícios, cargas e anamneses passam a operar direta e exclusivamente contra os endpoints da VPS em `matrix.vlfp.com.br`;
+  - O navegador retém exclusivamente a credencial JWT ativa, a sessão do usuário conectado e o endpoint configurado.
 
 ## 5. Diretriz Obrigatória de Versionamento e Deploy Contínuo (CI/CD)
 

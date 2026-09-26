@@ -1,18 +1,15 @@
-import { ALUNOS_EXEMPLO, PROFESSORA_PADRAO } from '../dados/iniciais';
+import { PROFESSORA_PADRAO } from '../dados/iniciais';
 import { DivisaoTreino, FichaDeTreino, RespostasAnamnese, UsuarioAluno, UsuarioProfessor, UsuarioSessao } from '../tipos';
 
-const CHAVE_ALUNOS = 'shara_ef_alunos_v1';
+// Chaves permitidas exclusivamente para manutenção da sessão autenticada e configuração de rede
 const CHAVE_SESSAO = 'shara_ef_sessao_v1';
-const CHAVE_SENHAS = 'shara_ef_credenciais_v1';
-const CHAVE_MODO_SIMULACAO = 'shara_ef_simulacao_aluno_id';
-const CHAVE_URL_API = 'shara_ef_url_api_v1';
-const CHAVE_PROFESSORA = 'shara_ef_professora_dados_v1';
 const CHAVE_TOKEN = 'shara_ef_jwt_token_v1';
+const CHAVE_URL_API = 'shara_ef_url_api_v1';
 
 const MARCADOR_FICHA_INICIO = '[SHARA_FICHA_BASE64:';
 const MARCADOR_FICHA_FIM = ']';
 
-// Utilitários de codificação Base64 com suporte a UTF-8 (acentos, cedilhas, caracteres especiais)
+// Utilitários de codificação Base64 com suporte total a UTF-8 (acentos, cedilhas, caracteres especiais)
 export function codificarBase64Utf8(texto: string): string {
   try {
     return btoa(unescape(encodeURIComponent(texto)));
@@ -31,7 +28,17 @@ export function decodificarBase64Utf8(base64: string): string {
 
 let temporizadorProgresso: ReturnType<typeof setTimeout> | null = null;
 
+/**
+ * ServicoArmazenamento - Camada de acesso a dados 100% orientada à VPS.
+ * REGRA INVIOLÁVEL: Nenhum dado de aluno, treino, anamnese ou credencial é persistido em localStorage.
+ * O navegador armazena estritamente o token JWT e a sessão do usuário ativo.
+ */
 export class ServicoArmazenamento {
+  // Estado volátil estritamente em memória de execução durante a sessão
+  private static alunosEmMemoria: UsuarioAluno[] = [];
+  private static idAlunoSimulado: string | null = null;
+  private static dadosProfessoraCache: UsuarioProfessor = PROFESSORA_PADRAO;
+
   // Gerenciamento de Token JWT
   static obterToken(): string | null {
     return localStorage.getItem(CHAVE_TOKEN);
@@ -45,7 +52,7 @@ export class ServicoArmazenamento {
     localStorage.removeItem(CHAVE_TOKEN);
   }
 
-  // Obter URL configurada para a API backend (padrão: matrix.vlfp.com.br)
+  // Obter URL da API backend na VPS (padrão: matrix.vlfp.com.br)
   static obterUrlApi(): string {
     const configurada = localStorage.getItem(CHAVE_URL_API);
     if (configurada && configurada.trim()) {
@@ -73,7 +80,7 @@ export class ServicoArmazenamento {
 
       const resposta = await fetch(`${base}/api/saude`, {
         signal: controle.signal,
-        headers: { 'Accept': 'application/json' }
+        headers: { Accept: 'application/json' }
       });
       clearTimeout(tempoLimite);
 
@@ -99,54 +106,38 @@ export class ServicoArmazenamento {
     }
   }
 
-  // Inicialização com dados padrão caso o storage esteja vazio
+  // Limpeza obrigatória de qualquer resíduo legado do localStorage
   static inicializar(): void {
-    if (!localStorage.getItem(CHAVE_ALUNOS)) {
-      localStorage.setItem(CHAVE_ALUNOS, JSON.stringify(ALUNOS_EXEMPLO));
-    }
-    if (!localStorage.getItem(CHAVE_SENHAS)) {
-      const senhasIniciais: Record<string, string> = {
-        'mariana@exemplo.com': '123456'
-      };
-      localStorage.setItem(CHAVE_SENHAS, JSON.stringify(senhasIniciais));
-    } else {
-      // Limpeza de segurança: remover credenciais padrão prévias
-      try {
-        const senhasRaw = localStorage.getItem(CHAVE_SENHAS);
-        if (senhasRaw) {
-          const senhas = JSON.parse(senhasRaw);
-          if (senhas['sara@sharaef.com.br'] === 'sara123') {
-            delete senhas['sara@sharaef.com.br'];
-            localStorage.setItem(CHAVE_SENHAS, JSON.stringify(senhas));
-          }
-        }
-      } catch {}
-    }
+    try {
+      localStorage.removeItem('shara_ef_alunos_v1');
+      localStorage.removeItem('shara_ef_credenciais_v1');
+      localStorage.removeItem('shara_ef_professora_dados_v1');
+      localStorage.removeItem('shara_ef_simulacao_aluno_id');
+    } catch {}
   }
 
-  // Verificar no banco (VPS) e localmente se há professor(a) cadastrado(a)
+  // Verificar status cadastral da professora no banco PostgreSQL na VPS
   static async verificarStatusProfessora(): Promise<{ configurado: boolean; nome?: string; email?: string }> {
     try {
       const urlApi = this.obterUrlApi();
       const controle = new AbortController();
-      const tempoLimite = setTimeout(() => controle.abort(), 4000);
+      const tempoLimite = setTimeout(() => controle.abort(), 5000);
       const resposta = await fetch(`${urlApi}/api/auth/professor/status`, {
         signal: controle.signal,
-        headers: { 'Accept': 'application/json' }
+        headers: { Accept: 'application/json' }
       });
       clearTimeout(tempoLimite);
 
       if (resposta.ok) {
         const dados = await resposta.json();
         if (dados.configurado && dados.email) {
-          const profConfigurada: UsuarioProfessor = {
+          this.dadosProfessoraCache = {
             id: 'prof-sara-1',
             papel: 'professor',
             nome: dados.nome || 'Sara',
             email: dados.email.trim().toLowerCase(),
             cref: '012345-G/SP'
           };
-          localStorage.setItem(CHAVE_PROFESSORA, JSON.stringify(profConfigurada));
         }
         return {
           configurado: Boolean(dados.configurado),
@@ -154,37 +145,19 @@ export class ServicoArmazenamento {
           email: dados.email
         };
       }
-    } catch {
-      // Em caso de falha de conexão à VPS, consulta se há credencial local válida
-    }
-
-    const profSalva = localStorage.getItem(CHAVE_PROFESSORA);
-    const senhasRaw = localStorage.getItem(CHAVE_SENHAS);
-    const senhas: Record<string, string> = senhasRaw ? JSON.parse(senhasRaw) : {};
-
-    if (profSalva) {
-      try {
-        const p = JSON.parse(profSalva);
-        if (p.email && senhas[p.email.toLowerCase()]) {
-          return { configurado: true, nome: p.nome, email: p.email };
-        }
-      } catch {}
+    } catch (e) {
+      console.warn('Falha ao verificar status da professora na VPS:', e);
     }
 
     return { configurado: false };
   }
 
-  // Obter dados cadastrais da professora (personalizado ou padrão)
+  // Obter dados cadastrais da professora
   static obterDadosProfessora(): UsuarioProfessor {
-    try {
-      const dados = localStorage.getItem(CHAVE_PROFESSORA);
-      return dados ? JSON.parse(dados) : PROFESSORA_PADRAO;
-    } catch {
-      return PROFESSORA_PADRAO;
-    }
+    return this.dadosProfessoraCache;
   }
 
-  // Configurar credenciais personalizadas da professora (Primeiro acesso ou alteração)
+  // Configurar credenciais da professora diretamente na VPS
   static async configurarCredenciaisProfessora(
     nome: string,
     email: string,
@@ -194,75 +167,71 @@ export class ServicoArmazenamento {
     const emailLimpo = email.trim().toLowerCase();
     const nomeFinal = nome.trim() || 'Sara';
 
+    const urlApi = this.obterUrlApi();
+    const resposta = await fetch(`${urlApi}/api/auth/professor/configurar-credenciais`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome: nomeFinal, email: emailLimpo, senha: senhaPlana })
+    });
+
+    const dados = await resposta.json();
+    if (!resposta.ok || !dados.sucesso) {
+      return {
+        sucesso: false,
+        mensagem: dados.mensagem || 'Falha ao registrar credenciais da professora na VPS.'
+      };
+    }
+
     const professorAtualizado: UsuarioProfessor = {
-      id: 'prof-sara-1',
+      id: dados.usuario?.id || 'prof-sara-1',
       papel: 'professor',
       nome: nomeFinal,
       email: emailLimpo,
       cref: '012345-G/SP'
     };
 
-    // 1. Sincronizar na VPS
-    try {
-      const urlApi = this.obterUrlApi();
-      await fetch(`${urlApi}/api/auth/professor/configurar-credenciais`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome: nomeFinal, email: emailLimpo, senha: senhaPlana })
-      });
-    } catch {
-      // Fallback offline
+    if (dados.token) {
+      this.salvarToken(dados.token);
     }
 
-    // 2. Salvar credencial e perfil local
-    const senhasRaw = localStorage.getItem(CHAVE_SENHAS);
-    const senhas: Record<string, string> = senhasRaw ? JSON.parse(senhasRaw) : {};
-    senhas[emailLimpo] = senhaPlana;
-    localStorage.setItem(CHAVE_SENHAS, JSON.stringify(senhas));
-    localStorage.setItem(CHAVE_PROFESSORA, JSON.stringify(professorAtualizado));
-
+    this.dadosProfessoraCache = professorAtualizado;
     this.definirSessao(professorAtualizado);
     this.desativarModoSimulacao();
 
     return {
       sucesso: true,
-      mensagem: `Credenciais da professora ${nomeFinal} configuradas com sucesso!`,
+      mensagem: dados.mensagem || `Credenciais da professora ${nomeFinal} configuradas com sucesso na VPS!`,
       usuario: professorAtualizado
     };
   }
 
-  // Sincronizar lista de alunos da VPS com o armazenamento local
+  // Sincronizar e obter lista de alunos estritamente a partir da VPS
   static async sincronizarAlunosRemoto(): Promise<UsuarioAluno[]> {
     this.inicializar();
     try {
       const urlApi = this.obterUrlApi();
       const token = this.obterToken();
       const sessaoAtual = this.obterSessao();
-      let profAtual = this.obterDadosProfessora();
 
-      // Garantir e-mail válido da professora na VPS
-      let emailProf = profAtual?.email;
+      // Obter e-mail verificado da professora na VPS
+      let emailProf = this.dadosProfessoraCache.email;
       if (!emailProf || emailProf === 'sara@sharaef.com.br') {
         const status = await this.verificarStatusProfessora();
         if (status?.email) {
           emailProf = status.email;
-          profAtual = this.obterDadosProfessora();
         } else {
           emailProf = 'saramilk1234@gmail.com';
         }
       }
 
       const headers: Record<string, string> = {
-        'Accept': 'application/json'
+        Accept: 'application/json'
       };
-      // Apenas envia o token no header Authorization se for professor(a),
-      // pois o endpoint /api/alunos da VPS aceita requisições com x-professor-email para leitura
+
       if (token && sessaoAtual?.papel === 'professor') {
         headers['Authorization'] = `Bearer ${token}`;
       }
-      if (emailProf) {
-        headers['x-professor-email'] = emailProf;
-      }
+      headers['x-professor-email'] = emailProf;
 
       const controle = new AbortController();
       const tempoLimite = setTimeout(() => controle.abort(), 8000);
@@ -276,17 +245,11 @@ export class ServicoArmazenamento {
         const dados = await resposta.json();
         if (dados.sucesso && Array.isArray(dados.alunos)) {
           const alunosRemotos: UsuarioAluno[] = dados.alunos;
-          const alunosLocais = this.obterAlunos();
-          const mapaLocais = new Map(alunosLocais.map((a) => [a.id, a]));
-          const mapaEmails = new Map(alunosLocais.map((a) => [a.email.toLowerCase(), a]));
 
-          // Mesclar decodificando fichas persistidas remotamente e preservando integridade
-          const alunosSincronizados: UsuarioAluno[] = alunosRemotos.map((remoto) => {
-            const local = mapaLocais.get(remoto.id) || mapaEmails.get(remoto.email.toLowerCase());
-
+          // Processar alunos e decodificar fichas persistidas no PostgreSQL da VPS
+          const alunosAtualizados: UsuarioAluno[] = alunosRemotos.map((remoto) => {
             let fichaEmbutida: FichaDeTreino | undefined = undefined;
 
-            // 1. Extrair ficha embutida no objetivoPrincipal caso presente
             if (remoto.anamnese?.objetivoPrincipal && remoto.anamnese.objetivoPrincipal.includes(MARCADOR_FICHA_INICIO)) {
               const partes = remoto.anamnese.objetivoPrincipal.split(MARCADOR_FICHA_INICIO);
               const objetivoLimpo = partes[0].trim();
@@ -299,17 +262,16 @@ export class ServicoArmazenamento {
                   try {
                     fichaEmbutida = JSON.parse(jsonFicha);
                   } catch (e) {
-                    console.warn('Erro ao interpretar ficha serializada:', e);
+                    console.warn('Erro ao decodificar ficha recebida da VPS:', e);
                   }
                 }
               }
               remoto.anamnese.objetivoPrincipal = objetivoLimpo || 'Condicionamento';
             }
 
-            // Ficha remota relacional > ficha remota embutida > ficha local
             const fichaFinal = (remoto.fichaAtiva?.divisoes && remoto.fichaAtiva.divisoes.length > 0)
               ? remoto.fichaAtiva
-              : (fichaEmbutida || remoto.fichaAtiva || local?.fichaAtiva);
+              : (fichaEmbutida || remoto.fichaAtiva);
 
             const statusFinal =
               fichaFinal && fichaFinal.divisoes && fichaFinal.divisoes.length > 0 && remoto.status === 'aguardando_ficha'
@@ -323,106 +285,58 @@ export class ServicoArmazenamento {
             };
           });
 
-          // Preservar alunos locais criados offline (excluindo os mocks padrão se a VPS já tiver dados reais)
-          const idsMocksPadrao = new Set(['aluno-demo-1', 'aluno-demo-2', 'aluno-demo-3']);
-          for (const local of alunosLocais) {
-            // Se já existem alunos reais na VPS, não reinserir os mocks padrão de teste
-            if (alunosRemotos.length > 0 && idsMocksPadrao.has(local.id)) {
-              continue;
-            }
-            const jaExiste = alunosSincronizados.some(
-              (s) => s.id === local.id || s.email.toLowerCase() === local.email.toLowerCase()
-            );
-            if (!jaExiste) {
-              alunosSincronizados.push(local);
-            }
-          }
+          this.alunosEmMemoria = alunosAtualizados;
 
-          this.salvarAlunos(alunosSincronizados);
-
-          // Atualizar sessão ativa do aluno com os dados mais recentes da ficha
+          // Atualizar sessão ativa caso seja aluno
           if (sessaoAtual && sessaoAtual.papel === 'aluno') {
-            const alunoSessaoAtualizado = alunosSincronizados.find(
+            const alunoAtualizado = alunosAtualizados.find(
               (a) => a.id === sessaoAtual.id || a.email.toLowerCase() === sessaoAtual.email.toLowerCase()
             );
-            if (alunoSessaoAtualizado) {
-              this.definirSessao(alunoSessaoAtualizado);
+            if (alunoAtualizado) {
+              this.definirSessao(alunoAtualizado);
             }
           }
 
-          // Notificar ouvintes do React
-          window.dispatchEvent(new CustomEvent('shara:atualizar_alunos', { detail: { alunos: alunosSincronizados } }));
-          return alunosSincronizados;
+          window.dispatchEvent(new CustomEvent('shara:atualizar_alunos', { detail: { alunos: alunosAtualizados } }));
+          return alunosAtualizados;
         }
       }
     } catch (erro) {
-      console.warn('Falha na sincronização remota com a VPS:', erro);
+      console.warn('Falha na comunicação direta com a VPS:', erro);
     }
 
-    return this.obterAlunos();
+    return this.alunosEmMemoria;
   }
 
-  // Obter todos os alunos cadastrados
+  // Obter alunos carregados na memória de execução
   static obterAlunos(): UsuarioAluno[] {
-    this.inicializar();
-    try {
-      const dados = localStorage.getItem(CHAVE_ALUNOS);
-      return dados ? JSON.parse(dados) : ALUNOS_EXEMPLO;
-    } catch {
-      return ALUNOS_EXEMPLO;
-    }
+    return this.alunosEmMemoria;
   }
 
-  // Salvar lista de alunos
+  // Atualizar cache de execução em memória
   static salvarAlunos(alunos: UsuarioAluno[]): void {
-    localStorage.setItem(CHAVE_ALUNOS, JSON.stringify(alunos));
+    this.alunosEmMemoria = alunos;
   }
 
-  // Obter um aluno específico por ID
+  // Obter aluno específico por ID
   static obterAlunoPorId(id: string): UsuarioAluno | undefined {
-    const alunos = this.obterAlunos();
-    return alunos.find((a) => a.id === id);
+    return this.alunosEmMemoria.find((a) => a.id === id);
   }
 
   // Obter aluno por e-mail
   static obterAlunoPorEmail(email: string): UsuarioAluno | undefined {
-    const alunos = this.obterAlunos();
-    return alunos.find((a) => a.email.toLowerCase() === email.toLowerCase());
+    return this.alunosEmMemoria.find((a) => a.email.toLowerCase() === email.toLowerCase());
   }
 
-  // Cadastrar novo aluno com anamnese e senha (sincroniza com VPS e salva localmente)
+  // Cadastrar novo aluno exclusivamente na VPS
   static async cadastrarNovoAluno(
     anamnese: RespostasAnamnese,
     email: string,
     senhaPlana: string
   ): Promise<{ sucesso: boolean; mensagem: string; aluno?: UsuarioAluno }> {
     this.inicializar();
-    const alunos = this.obterAlunos();
     const emailLimpo = email.trim().toLowerCase();
 
-    // Validar se e-mail pertence à professora
-    if (emailLimpo === PROFESSORA_PADRAO.email.toLowerCase()) {
-      return { sucesso: false, mensagem: 'Este e-mail pertence à administração da professora Sara.' };
-    }
-
-    if (alunos.some((a) => a.email.toLowerCase() === emailLimpo)) {
-      return { sucesso: false, mensagem: 'Já existe um aluno cadastrado com este e-mail. Utilize a opção de login.' };
-    }
-
-    const novoAluno: UsuarioAluno = {
-      id: 'aluno-' + Date.now(),
-      papel: 'aluno',
-      nome: anamnese.nome.trim() || 'Novo Aluno',
-      email: emailLimpo,
-      dataCadastro: new Date().toISOString().split('T')[0],
-      status: 'aguardando_ficha',
-      anamnese: {
-        ...anamnese,
-        dataPreenchimento: new Date().toISOString().split('T')[0]
-      }
-    };
-
-    // Tentar sincronizar com o backend na VPS
     try {
       const urlApi = this.obterUrlApi();
       const resposta = await fetch(`${urlApi}/api/alunos/cadastrar`, {
@@ -431,32 +345,43 @@ export class ServicoArmazenamento {
         body: JSON.stringify({ anamnese, email: emailLimpo, senha: senhaPlana })
       });
 
-      if (resposta.ok) {
-        const dadosApi = await resposta.json();
-        if (dadosApi.token) {
-          this.salvarToken(dadosApi.token);
-        }
-        if (dadosApi.usuario?.id) {
-          novoAluno.id = dadosApi.usuario.id;
-        }
+      const dadosApi = await resposta.json();
+      if (!resposta.ok || !dadosApi.sucesso) {
+        return {
+          sucesso: false,
+          mensagem: dadosApi.mensagem || 'Falha ao cadastrar aluno no servidor da VPS.'
+        };
       }
-    } catch {
-      // Se a VPS estiver inacessível no momento, o cadastro continua funcional no modo local offline
+
+      if (dadosApi.token) {
+        this.salvarToken(dadosApi.token);
+      }
+
+      const novoAluno: UsuarioAluno = {
+        id: dadosApi.usuario?.id || 'aluno-' + Date.now(),
+        papel: 'aluno',
+        nome: anamnese.nome.trim() || 'Novo Aluno',
+        email: emailLimpo,
+        dataCadastro: new Date().toISOString().split('T')[0],
+        status: 'aguardando_ficha',
+        anamnese: {
+          ...anamnese,
+          dataPreenchimento: new Date().toISOString().split('T')[0]
+        }
+      };
+
+      this.alunosEmMemoria.push(novoAluno);
+      return { sucesso: true, mensagem: 'Cadastro realizado com sucesso na VPS!', aluno: novoAluno };
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Falha na conexão com a VPS';
+      return {
+        sucesso: false,
+        mensagem: `Não foi possível conectar ao servidor da VPS: ${msg}`
+      };
     }
-
-    alunos.push(novoAluno);
-    this.salvarAlunos(alunos);
-
-    // Salvar credencial local
-    const senhasRaw = localStorage.getItem(CHAVE_SENHAS);
-    const senhas: Record<string, string> = senhasRaw ? JSON.parse(senhasRaw) : {};
-    senhas[emailLimpo] = senhaPlana;
-    localStorage.setItem(CHAVE_SENHAS, JSON.stringify(senhas));
-
-    return { sucesso: true, mensagem: 'Cadastro realizado com sucesso!', aluno: novoAluno };
   }
 
-  // Atualizar ou prescrever ficha de treino de um aluno
+  // Salvar ficha de treino exclusivamente na VPS
   static async salvarFichaAluno(
     alunoId: string,
     divisoes: DivisaoTreino[],
@@ -479,19 +404,18 @@ export class ServicoArmazenamento {
 
     alunos[index].fichaAtiva = novaFicha;
     alunos[index].status = 'ativo';
-    this.salvarAlunos(alunos);
+    this.alunosEmMemoria = alunos;
 
     const sessaoAtual = this.obterSessao();
     if (sessaoAtual && sessaoAtual.id === alunoId) {
       this.definirSessao(alunos[index]);
     }
 
-    // Persistência em nuvem (VPS)
     try {
       const urlApi = this.obterUrlApi();
       const alunoAtual = alunos[index];
 
-      // 1. Persistir via PUT /api/alunos/:id com a ficha serializada em Base64 no objetivoPrincipal
+      // 1. Persistir via PUT /api/alunos/:id com a ficha serializada no campo objetivoPrincipal
       const objetivoBase = (alunoAtual.anamnese?.objetivoPrincipal || 'Condicionamento')
         .split(MARCADOR_FICHA_INICIO)[0]
         .trim();
@@ -507,7 +431,7 @@ export class ServicoArmazenamento {
         })
       });
 
-      // 2. Persistir via POST /api/alunos/:id/ficha (para backend relacional)
+      // 2. Persistir via POST /api/alunos/:id/ficha no PostgreSQL relacional
       await fetch(`${urlApi}/api/alunos/${alunoId}/ficha`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -519,14 +443,14 @@ export class ServicoArmazenamento {
       }).catch(() => {});
 
       window.dispatchEvent(new CustomEvent('shara:atualizar_alunos'));
+      return true;
     } catch (erro) {
-      console.warn('Falha na persistência remota da ficha (salvo no cache local):', erro);
+      console.error('Erro ao persistir ficha na VPS:', erro);
+      throw erro;
     }
-
-    return true;
   }
 
-  // Agendar sincronização assíncrona de progresso de treino com a nuvem (debounce)
+  // Agendar sincronização assíncrona de progresso de treino diretamente com a VPS
   private static agendarSincroniaProgresso(aluno: UsuarioAluno): void {
     if (temporizadorProgresso) {
       clearTimeout(temporizadorProgresso);
@@ -550,12 +474,12 @@ export class ServicoArmazenamento {
           })
         });
       } catch (e) {
-        console.warn('Falha ao sincronizar progresso na nuvem:', e);
+        console.warn('Falha ao sincronizar progresso na VPS:', e);
       }
     }, 1500);
   }
 
-  // Atualizar progresso do treino
+  // Atualizar progresso do treino exclusivamente na VPS
   static atualizarProgressoExercicio(
     alunoId: string,
     divisaoId: string,
@@ -564,8 +488,7 @@ export class ServicoArmazenamento {
     concluida: boolean,
     cargaRegistrada?: string
   ): void {
-    const alunos = this.obterAlunos();
-    const aluno = alunos.find((a) => a.id === alunoId);
+    const aluno = this.obterAlunoPorId(alunoId);
     if (!aluno || !aluno.fichaAtiva) return;
 
     const divisao = aluno.fichaAtiva.divisoes.find((d) => d.id === divisaoId);
@@ -586,23 +509,23 @@ export class ServicoArmazenamento {
       exercicio.cargasRegistradas[indiceSerie] = cargaRegistrada;
     }
 
-    this.salvarAlunos(alunos);
-
     const sessaoAtual = this.obterSessao();
     if (sessaoAtual && sessaoAtual.id === alunoId) {
       this.definirSessao(aluno);
     }
 
-    // Persistir progresso na nuvem assincronamente
+    // Persistir na VPS
     this.agendarSincroniaProgresso(aluno);
   }
 
-  // Autenticação de usuário (tenta API da VPS e possui fallback local)
-  static async autenticar(email: string, senha: string): Promise<{ sucesso: boolean; mensagem: string; usuario?: UsuarioSessao }> {
+  // Autenticação de usuário exclusivamente na VPS
+  static async autenticar(
+    email: string,
+    senha: string
+  ): Promise<{ sucesso: boolean; mensagem: string; usuario?: UsuarioSessao }> {
     this.inicializar();
     const emailLimpo = email.trim().toLowerCase();
 
-    // 1. Tentar autenticação remota na VPS
     try {
       const urlApi = this.obterUrlApi();
       const resposta = await fetch(`${urlApi}/api/auth/login`, {
@@ -611,105 +534,77 @@ export class ServicoArmazenamento {
         body: JSON.stringify({ email: emailLimpo, senha })
       });
 
-      if (resposta.ok) {
-        const dados = await resposta.json();
-        if (dados.token) {
-          this.salvarToken(dados.token);
-        }
-        if (dados.usuario) {
-          if (dados.usuario.papel === 'professor') {
-            const profAtualizada: UsuarioProfessor = {
-              id: dados.usuario.id || 'prof-sara-1',
-              papel: 'professor',
-              nome: dados.usuario.nome || 'Sara',
-              email: dados.usuario.email.trim().toLowerCase(),
-              cref: dados.usuario.cref || '012345-G/SP'
-            };
-            localStorage.setItem(CHAVE_PROFESSORA, JSON.stringify(profAtualizada));
-            this.definirSessao(profAtualizada);
-            this.desativarModoSimulacao();
-            await this.sincronizarAlunosRemoto();
-            return { sucesso: true, mensagem: dados.mensagem, usuario: profAtualizada };
-          } else {
-            // Login de Aluno: sincroniza com a VPS para obter anamnese e ficha completas
-            await this.sincronizarAlunosRemoto();
-            const alunoCompleto = this.obterAlunoPorEmail(emailLimpo) || {
-              id: dados.usuario.id,
-              papel: 'aluno',
+      const dados = await resposta.json();
+
+      if (!resposta.ok || !dados.sucesso) {
+        return {
+          sucesso: false,
+          mensagem: dados.mensagem || 'Credenciais inválidas.'
+        };
+      }
+
+      if (dados.token) {
+        this.salvarToken(dados.token);
+      }
+
+      if (dados.usuario) {
+        if (dados.usuario.papel === 'professor') {
+          const prof: UsuarioProfessor = {
+            id: dados.usuario.id || 'prof-sara-1',
+            papel: 'professor',
+            nome: dados.usuario.nome || 'Sara',
+            email: dados.usuario.email.trim().toLowerCase(),
+            cref: dados.usuario.cref || '012345-G/SP'
+          };
+          this.dadosProfessoraCache = prof;
+          this.definirSessao(prof);
+          this.desativarModoSimulacao();
+          await this.sincronizarAlunosRemoto();
+          return { sucesso: true, mensagem: dados.mensagem, usuario: prof };
+        } else {
+          // Aluno logado: busca dados atualizados direto da VPS
+          await this.sincronizarAlunosRemoto();
+          const alunoCompleto = this.obterAlunoPorEmail(emailLimpo) || {
+            id: dados.usuario.id,
+            papel: 'aluno',
+            nome: dados.usuario.nome,
+            email: dados.usuario.email,
+            dataCadastro: dados.usuario.data_cadastro || new Date().toISOString().split('T')[0],
+            status: dados.usuario.status || 'aguardando_ficha',
+            anamnese: dados.usuario.anamnese || {
               nome: dados.usuario.nome,
-              email: dados.usuario.email,
-              dataCadastro: dados.usuario.data_cadastro || new Date().toISOString().split('T')[0],
-              status: dados.usuario.status || 'aguardando_ficha',
-              anamnese: dados.usuario.anamnese || {
-                nome: dados.usuario.nome,
-                idade: '30',
-                contato: '',
-                peso: '70',
-                altura: '170',
-                relacaoAtividade: '',
-                possuiRestricaoMedica: 'Não',
-                possuiLesaoDorCronica: 'Não',
-                possuiDoenca: [],
-                disponibilidadeTreino: [],
-                historicoTreino: '',
-                nivelConhecimentoTreino: 5,
-                objetivoPrincipal: 'Condicionamento',
-                localTreino: 'Academia',
-                dataPreenchimento: new Date().toISOString().split('T')[0]
-              }
-            };
-            this.definirSessao(alunoCompleto);
-            this.desativarModoSimulacao();
-            return { sucesso: true, mensagem: dados.mensagem, usuario: alunoCompleto };
-          }
+              idade: '30',
+              contato: '',
+              peso: '70',
+              altura: '170',
+              relacaoAtividade: '',
+              possuiRestricaoMedica: 'Não',
+              possuiLesaoDorCronica: 'Não',
+              possuiDoenca: [],
+              disponibilidadeTreino: [],
+              historicoTreino: '',
+              nivelConhecimentoTreino: 5,
+              objetivoPrincipal: 'Condicionamento',
+              localTreino: 'Academia',
+              dataPreenchimento: new Date().toISOString().split('T')[0]
+            }
+          };
+          this.definirSessao(alunoCompleto);
+          this.desativarModoSimulacao();
+          return { sucesso: true, mensagem: dados.mensagem, usuario: alunoCompleto };
         }
       }
+
+      return { sucesso: false, mensagem: 'Resposta do servidor incompleta.' };
     } catch {
-      // Fallback para autenticação local
+      return {
+        sucesso: false,
+        mensagem: 'Não foi possível conectar ao servidor na VPS. Verifique sua conexão com a internet.'
+      };
     }
-
-    // 2. Fallback de autenticação local (para suporte PWA offline)
-    const senhasRaw = localStorage.getItem(CHAVE_SENHAS);
-    const senhas: Record<string, string> = senhasRaw ? JSON.parse(senhasRaw) : {};
-    const profAtual = this.obterDadosProfessora();
-
-    if (emailLimpo === profAtual.email.toLowerCase()) {
-      const senhaCorreta = senhas[emailLimpo] || senhas[profAtual.email.toLowerCase()];
-      if (!senhaCorreta) {
-        return { sucesso: false, mensagem: 'Nenhuma credencial de professora configurada. Realize o cadastro inicial.' };
-      }
-      if (senha === senhaCorreta) {
-        this.definirSessao(profAtual);
-        this.desativarModoSimulacao();
-        return { sucesso: true, mensagem: `Bem-vinda, Professora ${profAtual.nome}!`, usuario: profAtual };
-      }
-      return { sucesso: false, mensagem: 'Senha incorreta para a conta da Professora.' };
-    }
-
-    const aluno = this.obterAlunoPorEmail(emailLimpo);
-    if (!aluno) {
-      return { sucesso: false, mensagem: 'E-mail não encontrado. Caso seja seu primeiro acesso, cadastre-se em Novo Aluno.' };
-    }
-
-    if (aluno.status === 'inativo') {
-      return { sucesso: false, mensagem: 'Seu acesso foi desativado pela professora. Entre em contato para reativação.' };
-    }
-
-    const senhaArmazenada = senhas[emailLimpo];
-    if (!senhaArmazenada || senhaArmazenada !== senha) {
-      return { sucesso: false, mensagem: 'Senha de aluno incorreta.' };
-    }
-
-    this.definirSessao(aluno);
-    this.desativarModoSimulacao();
-    return { sucesso: true, mensagem: `Olá, ${aluno.nome}! Bom treino.`, usuario: aluno };
   }
 
-  // --------------------------------------------------------------------------
-  // Gestão de Alunos (Editar, Desativar / Reativar Acesso e Excluir)
-  // --------------------------------------------------------------------------
-
-  // Atualizar dados cadastrais do aluno
+  // Atualizar dados cadastrais do aluno na VPS
   static async atualizarDadosAluno(
     alunoId: string,
     dadosAtualizados: {
@@ -723,110 +618,87 @@ export class ServicoArmazenamento {
       objetivoPrincipal?: string;
     }
   ): Promise<{ sucesso: boolean; mensagem: string }> {
-    const alunos = this.obterAlunos();
-    const index = alunos.findIndex((a) => a.id === alunoId);
-    if (index === -1) {
-      return { sucesso: false, mensagem: 'Aluno não encontrado.' };
+    const urlApi = this.obterUrlApi();
+    const resposta = await fetch(`${urlApi}/api/alunos/${alunoId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dadosAtualizados)
+    });
+
+    const dados = await resposta.json();
+    if (!resposta.ok || !dados.sucesso) {
+      return { sucesso: false, mensagem: dados.mensagem || 'Falha ao atualizar dados na VPS.' };
     }
 
-    const aluno = alunos[index];
-    if (dadosAtualizados.nome) {
-      aluno.nome = dadosAtualizados.nome.trim();
-      aluno.anamnese.nome = dadosAtualizados.nome.trim();
-    }
-    if (dadosAtualizados.email) {
-      const emailAntigo = aluno.email.toLowerCase();
-      const emailNovo = dadosAtualizados.email.trim().toLowerCase();
-      const senhasRaw = localStorage.getItem(CHAVE_SENHAS);
-      if (senhasRaw) {
-        const senhas = JSON.parse(senhasRaw);
-        if (senhas[emailAntigo]) {
-          senhas[emailNovo] = senhas[emailAntigo];
-          delete senhas[emailAntigo];
-          localStorage.setItem(CHAVE_SENHAS, JSON.stringify(senhas));
-        }
+    // Atualizar objeto na memória
+    const index = this.alunosEmMemoria.findIndex((a) => a.id === alunoId);
+    if (index !== -1) {
+      const aluno = this.alunosEmMemoria[index];
+      if (dadosAtualizados.nome) {
+        aluno.nome = dadosAtualizados.nome.trim();
+        aluno.anamnese.nome = dadosAtualizados.nome.trim();
       }
-      aluno.email = emailNovo;
-    }
-    if (dadosAtualizados.status) {
-      aluno.status = dadosAtualizados.status;
-    }
-    if (dadosAtualizados.contato) aluno.anamnese.contato = dadosAtualizados.contato.trim();
-    if (dadosAtualizados.idade) aluno.anamnese.idade = dadosAtualizados.idade.trim();
-    if (dadosAtualizados.peso) aluno.anamnese.peso = dadosAtualizados.peso.trim();
-    if (dadosAtualizados.altura) aluno.anamnese.altura = dadosAtualizados.altura.trim();
-    if (dadosAtualizados.objetivoPrincipal) aluno.anamnese.objetivoPrincipal = dadosAtualizados.objetivoPrincipal.trim();
+      if (dadosAtualizados.email) aluno.email = dadosAtualizados.email.trim().toLowerCase();
+      if (dadosAtualizados.status) aluno.status = dadosAtualizados.status;
+      if (dadosAtualizados.contato) aluno.anamnese.contato = dadosAtualizados.contato.trim();
+      if (dadosAtualizados.idade) aluno.anamnese.idade = dadosAtualizados.idade.trim();
+      if (dadosAtualizados.peso) aluno.anamnese.peso = dadosAtualizados.peso.trim();
+      if (dadosAtualizados.altura) aluno.anamnese.altura = dadosAtualizados.altura.trim();
+      if (dadosAtualizados.objetivoPrincipal) aluno.anamnese.objetivoPrincipal = dadosAtualizados.objetivoPrincipal.trim();
+      this.alunosEmMemoria[index] = aluno;
 
-    alunos[index] = aluno;
-    this.salvarAlunos(alunos);
-
-    const sessao = this.obterSessao();
-    if (sessao && sessao.id === alunoId) {
-      this.definirSessao(aluno);
+      const sessao = this.obterSessao();
+      if (sessao && sessao.id === alunoId) {
+        this.definirSessao(aluno);
+      }
     }
 
-    try {
-      const urlApi = this.obterUrlApi();
-      await fetch(`${urlApi}/api/alunos/${alunoId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dadosAtualizados)
-      });
-    } catch {}
-
-    return { sucesso: true, mensagem: 'Dados do aluno atualizados com sucesso!' };
+    return { sucesso: true, mensagem: 'Dados do aluno atualizados com sucesso na VPS!' };
   }
 
-  // Alternar status (ativar / desativar acesso)
+  // Alternar status (ativar / desativar acesso) na VPS
   static async alternarStatusAluno(
     alunoId: string,
     novoStatus: 'ativo' | 'inativo' | 'aguardando_ficha'
   ): Promise<{ sucesso: boolean; mensagem: string }> {
-    const alunos = this.obterAlunos();
-    const index = alunos.findIndex((a) => a.id === alunoId);
-    if (index === -1) {
-      return { sucesso: false, mensagem: 'Aluno não encontrado.' };
+    const urlApi = this.obterUrlApi();
+    const resposta = await fetch(`${urlApi}/api/alunos/${alunoId}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: novoStatus })
+    });
+
+    const dados = await resposta.json();
+    if (!resposta.ok || !dados.sucesso) {
+      return { sucesso: false, mensagem: dados.mensagem || 'Falha ao alterar status na VPS.' };
     }
 
-    alunos[index].status = novoStatus;
-    this.salvarAlunos(alunos);
-
-    try {
-      const urlApi = this.obterUrlApi();
-      await fetch(`${urlApi}/api/alunos/${alunoId}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: novoStatus })
-      });
-    } catch {}
+    const index = this.alunosEmMemoria.findIndex((a) => a.id === alunoId);
+    if (index !== -1) {
+      this.alunosEmMemoria[index].status = novoStatus;
+    }
 
     return {
       sucesso: true,
-      mensagem: novoStatus === 'inativo' ? 'Acesso do aluno desativado.' : 'Acesso do aluno ativado.'
+      mensagem: novoStatus === 'inativo' ? 'Acesso do aluno desativado na VPS.' : 'Acesso do aluno ativado na VPS.'
     };
   }
 
-  // Excluir aluno definitivamente
+  // Excluir aluno definitivamente na VPS
   static async excluirAluno(alunoId: string): Promise<{ sucesso: boolean; mensagem: string }> {
-    const alunos = this.obterAlunos();
-    const aluno = alunos.find((a) => a.id === alunoId);
-    if (!aluno) {
-      return { sucesso: false, mensagem: 'Aluno não encontrado.' };
+    const urlApi = this.obterUrlApi();
+    const resposta = await fetch(`${urlApi}/api/alunos/${alunoId}`, {
+      method: 'DELETE'
+    });
+
+    const dados = await resposta.json();
+    if (!resposta.ok || !dados.sucesso) {
+      return { sucesso: false, mensagem: dados.mensagem || 'Falha ao excluir aluno na VPS.' };
     }
 
-    const novosAlunos = alunos.filter((a) => a.id !== alunoId);
-    this.salvarAlunos(novosAlunos);
+    this.alunosEmMemoria = this.alunosEmMemoria.filter((a) => a.id !== alunoId);
 
-    try {
-      const senhasRaw = localStorage.getItem(CHAVE_SENHAS);
-      if (senhasRaw) {
-        const senhas = JSON.parse(senhasRaw);
-        delete senhas[aluno.email.toLowerCase()];
-        localStorage.setItem(CHAVE_SENHAS, JSON.stringify(senhas));
-      }
-    } catch {}
-
-    if (localStorage.getItem(CHAVE_MODO_SIMULACAO) === alunoId) {
+    if (this.idAlunoSimulado === alunoId) {
       this.desativarModoSimulacao();
     }
 
@@ -835,17 +707,10 @@ export class ServicoArmazenamento {
       this.encerrarSessao();
     }
 
-    try {
-      const urlApi = this.obterUrlApi();
-      await fetch(`${urlApi}/api/alunos/${alunoId}`, {
-        method: 'DELETE'
-      });
-    } catch {}
-
-    return { sucesso: true, mensagem: 'Aluno excluído com sucesso.' };
+    return { sucesso: true, mensagem: 'Aluno excluído com sucesso da VPS.' };
   }
 
-  // Gerenciamento de sessão
+  // Gerenciamento de sessão (apenas credencial JWT e identidade do usuário conectado)
   static obterSessao(): UsuarioSessao | null {
     try {
       const dados = localStorage.getItem(CHAVE_SESSAO);
@@ -865,18 +730,17 @@ export class ServicoArmazenamento {
     this.desativarModoSimulacao();
   }
 
-  // Modo Simulação (Sara visualizando como um aluno específico)
+  // Modo Simulação (Sara visualizando como um aluno específico em tempo de execução)
   static ativarModoSimulacao(alunoId: string): void {
-    localStorage.setItem(CHAVE_MODO_SIMULACAO, alunoId);
+    this.idAlunoSimulado = alunoId;
   }
 
   static obterAlunoSimulado(): UsuarioAluno | null {
-    const id = localStorage.getItem(CHAVE_MODO_SIMULACAO);
-    if (!id) return null;
-    return this.obterAlunoPorId(id) || null;
+    if (!this.idAlunoSimulado) return null;
+    return this.obterAlunoPorId(this.idAlunoSimulado) || null;
   }
 
   static desativarModoSimulacao(): void {
-    localStorage.removeItem(CHAVE_MODO_SIMULACAO);
+    this.idAlunoSimulado = null;
   }
 }

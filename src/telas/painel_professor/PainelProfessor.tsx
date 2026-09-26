@@ -31,7 +31,7 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
   useEffect(() => {
     let montado = true;
     ServicoArmazenamento.sincronizarAlunosRemoto().then((lista) => {
-      if (montado && lista && lista.length > 0) {
+      if (montado && lista) {
         setAlunos(lista);
       }
     });
@@ -178,7 +178,7 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
       setAlunos(ServicoArmazenamento.obterAlunos());
       setAlunoParaPrescrever(null);
     } catch {
-      alert('Ocorreu um erro ao salvar a ficha. Os dados foram mantidos localmente.');
+      alert('Ocorreu um erro ao salvar a ficha no servidor da VPS. Verifique a conexão com a internet.');
     } finally {
       setSalvandoFicha(false);
     }

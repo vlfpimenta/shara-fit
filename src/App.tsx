@@ -61,10 +61,9 @@ export const App: React.FC = () => {
             setUsuario(alunoRecarregado);
           }
         } else if (sessaoAtual.papel === 'professor') {
-          const simuladoId = localStorage.getItem('shara_ef_simulacao_aluno_id');
-          if (simuladoId) {
-            const simuladoRecarregado = ServicoArmazenamento.obterAlunoPorId(simuladoId);
-            if (simuladoRecarregado) setAlunoSimulado(simuladoRecarregado);
+          const simuladoRecarregado = ServicoArmazenamento.obterAlunoSimulado();
+          if (simuladoRecarregado) {
+            setAlunoSimulado(simuladoRecarregado);
           }
         }
       }
