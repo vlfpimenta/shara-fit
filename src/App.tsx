@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Cabecalho } from './componentes/cabecalho/Cabecalho';
 import { ModalPrivacidade } from './componentes/modal_privacidade/ModalPrivacidade';
 import { ModalConfigVps } from './componentes/modal_vps/ModalConfigVps';
@@ -54,17 +54,20 @@ export const App: React.FC = () => {
 
     const tratarAtualizacaoGlobal = () => {
       const sessaoAtual = ServicoArmazenamento.obterSessao();
-      if (sessaoAtual) {
-        if (sessaoAtual.papel === 'aluno') {
-          const alunoRecarregado = ServicoArmazenamento.obterAlunoPorId(sessaoAtual.id);
-          if (alunoRecarregado) {
-            setUsuario(alunoRecarregado);
-          }
-        } else if (sessaoAtual.papel === 'professor') {
-          const simuladoRecarregado = ServicoArmazenamento.obterAlunoSimulado();
-          if (simuladoRecarregado) {
-            setAlunoSimulado(simuladoRecarregado);
-          }
+      if (!sessaoAtual) {
+        setUsuario(null);
+        setAlunoSimulado(null);
+        return;
+      }
+      if (sessaoAtual.papel === 'aluno') {
+        const alunoRecarregado = ServicoArmazenamento.obterAlunoPorId(sessaoAtual.id);
+        if (alunoRecarregado) {
+          setUsuario(alunoRecarregado);
+        }
+      } else if (sessaoAtual.papel === 'professor') {
+        const simuladoRecarregado = ServicoArmazenamento.obterAlunoSimulado();
+        if (simuladoRecarregado) {
+          setAlunoSimulado(simuladoRecarregado);
         }
       }
     };
@@ -249,6 +252,21 @@ export const App: React.FC = () => {
     }
   };
 
+  // Handlers memorizados para atualização de aluno sem re-renderizar em cascata
+  const tratarAtualizacaoAluno = useCallback((alunoAtualizado: UsuarioAluno) => {
+    setUsuario((usuarioAnterior) => {
+      if (!usuarioAnterior) return null;
+      return alunoAtualizado;
+    });
+  }, []);
+
+  const tratarAtualizacaoAlunoSimulado = useCallback((simuladoAtualizado: UsuarioAluno) => {
+    setAlunoSimulado((simuladoAnterior) => {
+      if (!simuladoAnterior) return null;
+      return simuladoAtualizado;
+    });
+  }, []);
+
   const irParaInicio = () => {
     if (usuario) {
       setTelaAtual('painel');
@@ -280,7 +298,7 @@ export const App: React.FC = () => {
               alunoSimulado ? (
                 <PainelAluno
                   aluno={alunoSimulado}
-                  aoAtualizarAluno={(alunoAtualizado) => setAlunoSimulado(alunoAtualizado)}
+                  aoAtualizarAluno={tratarAtualizacaoAlunoSimulado}
                 />
               ) : (
                 <PainelProfessor aoAtivarModoAluno={ativarModoAluno} />
@@ -288,7 +306,7 @@ export const App: React.FC = () => {
             ) : (
               <PainelAluno
                 aluno={usuario as UsuarioAluno}
-                aoAtualizarAluno={(alunoAtualizado) => setUsuario(alunoAtualizado)}
+                aoAtualizarAluno={tratarAtualizacaoAluno}
               />
             )}
           </>

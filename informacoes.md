@@ -146,6 +146,11 @@ shara-fit/
   - Limpeza ativa de resíduos legados de dados locais ao inicializar a aplicação;
   - Todas as leituras e gravações de alunos, treinos, divisões, exercícios, cargas e anamneses passam a operar direta e exclusivamente contra os endpoints da VPS em `matrix.vlfp.com.br`;
   - O navegador retém exclusivamente a credencial JWT ativa, a sessão do usuário conectado e o endpoint configurado.
+- [x] Correção do travamento em sincronização infinita e re-login involuntário no botão "Sair":
+  - **Deduplicação de sincronizações concorrentes na VPS**: `ServicoArmazenamento.sincronizarAlunosRemoto()` agora implementa trava atômica de Promise compartilhada em voo (`promessaSincronizacaoEmAndamento`), evitando que dezenas de requisições HTTP paralelas sobrecarreguem a rede.
+  - **Interrupção do ciclo de renderização perpétuo**: O `PainelAluno.tsx` teve seu `useEffect` estabilizado para carregar a ficha remota estritamente uma única vez na primeira montagem (`carregamentoInicialRef`), e o ouvinte redundante de eventos globais foi removido para seguir o fluxo unidirecional de props originado no container raiz.
+  - **Estabilização de callbacks no React**: Em `App.tsx`, as funções `tratarAtualizacaoAluno` e `tratarAtualizacaoAlunoSimulado` foram encapsuladas em `useCallback`, mantendo referências estáveis entre ciclos de renderização e impedindo a recriação desnecessária de efeitos colaterais.
+  - **Trava contra retorno involuntário ao clicar em "Sair"**: Adicionada verificação rigorosa pós-fetch em `sincronizarAlunosRemoto()` (`obterSessao()`). Caso o usuário tenha clicado em "Sair" enquanto uma requisição à VPS viajava pela rede, o retorno da resposta descarta a restauração da sessão no armazenamento e bloqueia o disparo de eventos globais de atualização. Da mesma forma, o ouvinte global em `App.tsx` agora assegura o encerramento do estado visual caso nenhuma sessão ativa exista.
 
 ## 5. Diretriz Obrigatória de Versionamento e Deploy Contínuo (CI/CD)
 

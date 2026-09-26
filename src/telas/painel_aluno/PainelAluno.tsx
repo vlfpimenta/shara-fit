@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { CronometroDescanso } from '../../componentes/cronometro/CronometroDescanso';
 import { IconeCheck, IconeCronometro, IconeHaltere, IconeInformacao, IconePdf, IconeSincronizar } from '../../componentes/icones';
 import { ServicoArmazenamento } from '../../servicos/armazenamento';
@@ -17,9 +17,11 @@ export const PainelAluno: React.FC<PropriedadesPainelAluno> = ({ aluno, aoAtuali
   const [tempoDescansoAtivo, setTempoDescansoAtivo] = useState<number>(60);
   const [mostrarCronometro, setMostrarCronometro] = useState<boolean>(true);
   const [sincronizandoFicha, setSincronizandoFicha] = useState<boolean>(false);
+  const carregamentoInicialRef = useRef<boolean>(false);
 
   // Recarregar ficha remota atualizada da VPS
   const recarregarFicha = useCallback(async () => {
+    if (sincronizandoFicha) return;
     setSincronizandoFicha(true);
     try {
       await ServicoArmazenamento.sincronizarAlunosRemoto();
@@ -30,24 +32,17 @@ export const PainelAluno: React.FC<PropriedadesPainelAluno> = ({ aluno, aoAtuali
     } finally {
       setSincronizandoFicha(false);
     }
-  }, [aluno.id, aoAtualizarAluno]);
+  }, [aluno.id, aoAtualizarAluno, sincronizandoFicha]);
 
-  // Sincronizar automaticamente no carregamento inicial do painel do aluno
+  // Sincronizar apenas na primeira montagem se a ficha ainda não contiver divisões
   useEffect(() => {
-    recarregarFicha();
-  }, [recarregarFicha]);
-
-  // Escutar eventos globais de atualização dos alunos
-  useEffect(() => {
-    const tratarAtualizacaoGlobal = () => {
-      const alunoAtualizado = ServicoArmazenamento.obterAlunoPorId(aluno.id);
-      if (alunoAtualizado) {
-        aoAtualizarAluno(alunoAtualizado);
+    if (!carregamentoInicialRef.current) {
+      carregamentoInicialRef.current = true;
+      if (!aluno.fichaAtiva?.divisoes || aluno.fichaAtiva.divisoes.length === 0) {
+        recarregarFicha();
       }
-    };
-    window.addEventListener('shara:atualizar_alunos', tratarAtualizacaoGlobal);
-    return () => window.removeEventListener('shara:atualizar_alunos', tratarAtualizacaoGlobal);
-  }, [aluno.id, aoAtualizarAluno]);
+    }
+  }, [aluno.fichaAtiva, recarregarFicha]);
 
   // Ajustar divisão ativa caso a ficha seja carregada ou mude
   useEffect(() => {

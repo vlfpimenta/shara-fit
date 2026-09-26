@@ -38,6 +38,7 @@ export class ServicoArmazenamento {
   private static alunosEmMemoria: UsuarioAluno[] = [];
   private static idAlunoSimulado: string | null = null;
   private static dadosProfessoraCache: UsuarioProfessor = PROFESSORA_PADRAO;
+  private static promessaSincronizacaoEmAndamento: Promise<UsuarioAluno[]> | null = null;
 
   // Gerenciamento de Token JWT
   static obterToken(): string | null {
@@ -205,107 +206,125 @@ export class ServicoArmazenamento {
     };
   }
 
-  // Sincronizar e obter lista de alunos estritamente a partir da VPS
+  // Sincronizar e obter lista de alunos estritamente a partir da VPS (com deduplicação em andamento)
   static async sincronizarAlunosRemoto(): Promise<UsuarioAluno[]> {
     this.inicializar();
-    try {
-      const urlApi = this.obterUrlApi();
-      const token = this.obterToken();
-      const sessaoAtual = this.obterSessao();
 
-      // Obter e-mail verificado da professora na VPS
-      let emailProf = this.dadosProfessoraCache.email;
-      if (!emailProf || emailProf === 'sara@sharaef.com.br') {
-        const status = await this.verificarStatusProfessora();
-        if (status?.email) {
-          emailProf = status.email;
-        } else {
-          emailProf = 'saramilk1234@gmail.com';
-        }
-      }
-
-      const headers: Record<string, string> = {
-        Accept: 'application/json'
-      };
-
-      if (token && sessaoAtual?.papel === 'professor') {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-      headers['x-professor-email'] = emailProf;
-
-      const controle = new AbortController();
-      const tempoLimite = setTimeout(() => controle.abort(), 8000);
-      const resposta = await fetch(`${urlApi}/api/alunos`, {
-        headers,
-        signal: controle.signal
-      });
-      clearTimeout(tempoLimite);
-
-      if (resposta.ok) {
-        const dados = await resposta.json();
-        if (dados.sucesso && Array.isArray(dados.alunos)) {
-          const alunosRemotos: UsuarioAluno[] = dados.alunos;
-
-          // Processar alunos e decodificar fichas persistidas no PostgreSQL da VPS
-          const alunosAtualizados: UsuarioAluno[] = alunosRemotos.map((remoto) => {
-            let fichaEmbutida: FichaDeTreino | undefined = undefined;
-
-            if (remoto.anamnese?.objetivoPrincipal && remoto.anamnese.objetivoPrincipal.includes(MARCADOR_FICHA_INICIO)) {
-              const partes = remoto.anamnese.objetivoPrincipal.split(MARCADOR_FICHA_INICIO);
-              const objetivoLimpo = partes[0].trim();
-              const resto = partes[1];
-              const indiceFim = resto.indexOf(MARCADOR_FICHA_FIM);
-              if (indiceFim !== -1) {
-                const b64 = resto.substring(0, indiceFim).trim();
-                const jsonFicha = decodificarBase64Utf8(b64);
-                if (jsonFicha) {
-                  try {
-                    fichaEmbutida = JSON.parse(jsonFicha);
-                  } catch (e) {
-                    console.warn('Erro ao decodificar ficha recebida da VPS:', e);
-                  }
-                }
-              }
-              remoto.anamnese.objetivoPrincipal = objetivoLimpo || 'Condicionamento';
-            }
-
-            const fichaFinal = (remoto.fichaAtiva?.divisoes && remoto.fichaAtiva.divisoes.length > 0)
-              ? remoto.fichaAtiva
-              : (fichaEmbutida || remoto.fichaAtiva);
-
-            const statusFinal =
-              fichaFinal && fichaFinal.divisoes && fichaFinal.divisoes.length > 0 && remoto.status === 'aguardando_ficha'
-                ? 'ativo'
-                : remoto.status;
-
-            return {
-              ...remoto,
-              status: statusFinal,
-              fichaAtiva: fichaFinal
-            };
-          });
-
-          this.alunosEmMemoria = alunosAtualizados;
-
-          // Atualizar sessão ativa caso seja aluno
-          if (sessaoAtual && sessaoAtual.papel === 'aluno') {
-            const alunoAtualizado = alunosAtualizados.find(
-              (a) => a.id === sessaoAtual.id || a.email.toLowerCase() === sessaoAtual.email.toLowerCase()
-            );
-            if (alunoAtualizado) {
-              this.definirSessao(alunoAtualizado);
-            }
-          }
-
-          window.dispatchEvent(new CustomEvent('shara:atualizar_alunos', { detail: { alunos: alunosAtualizados } }));
-          return alunosAtualizados;
-        }
-      }
-    } catch (erro) {
-      console.warn('Falha na comunicação direta com a VPS:', erro);
+    // Se já houver uma requisição idêntica em trânsito, acopla na mesma Promise
+    if (this.promessaSincronizacaoEmAndamento) {
+      return this.promessaSincronizacaoEmAndamento;
     }
 
-    return this.alunosEmMemoria;
+    this.promessaSincronizacaoEmAndamento = (async () => {
+      try {
+        const urlApi = this.obterUrlApi();
+        const token = this.obterToken();
+        const sessaoAntesDoFetch = this.obterSessao();
+
+        // Obter e-mail verificado da professora na VPS
+        let emailProf = this.dadosProfessoraCache.email;
+        if (!emailProf || emailProf === 'sara@sharaef.com.br') {
+          const status = await this.verificarStatusProfessora();
+          if (status?.email) {
+            emailProf = status.email;
+          } else {
+            emailProf = 'saramilk1234@gmail.com';
+          }
+        }
+
+        const headers: Record<string, string> = {
+          Accept: 'application/json'
+        };
+
+        if (token && sessaoAntesDoFetch?.papel === 'professor') {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        headers['x-professor-email'] = emailProf;
+
+        const controle = new AbortController();
+        const tempoLimite = setTimeout(() => controle.abort(), 8000);
+        const resposta = await fetch(`${urlApi}/api/alunos`, {
+          headers,
+          signal: controle.signal
+        });
+        clearTimeout(tempoLimite);
+
+        if (resposta.ok) {
+          const dados = await resposta.json();
+          if (dados.sucesso && Array.isArray(dados.alunos)) {
+            const alunosRemotos: UsuarioAluno[] = dados.alunos;
+
+            // Processar alunos e decodificar fichas persistidas no PostgreSQL da VPS
+            const alunosAtualizados: UsuarioAluno[] = alunosRemotos.map((remoto) => {
+              let fichaEmbutida: FichaDeTreino | undefined = undefined;
+
+              if (remoto.anamnese?.objetivoPrincipal && remoto.anamnese.objetivoPrincipal.includes(MARCADOR_FICHA_INICIO)) {
+                const partes = remoto.anamnese.objetivoPrincipal.split(MARCADOR_FICHA_INICIO);
+                const objetivoLimpo = partes[0].trim();
+                const resto = partes[1];
+                const indiceFim = resto.indexOf(MARCADOR_FICHA_FIM);
+                if (indiceFim !== -1) {
+                  const b64 = resto.substring(0, indiceFim).trim();
+                  const jsonFicha = decodificarBase64Utf8(b64);
+                  if (jsonFicha) {
+                    try {
+                      fichaEmbutida = JSON.parse(jsonFicha);
+                    } catch (e) {
+                      console.warn('Erro ao decodificar ficha recebida da VPS:', e);
+                    }
+                  }
+                }
+                remoto.anamnese.objetivoPrincipal = objetivoLimpo || 'Condicionamento';
+              }
+
+              const fichaFinal = (remoto.fichaAtiva?.divisoes && remoto.fichaAtiva.divisoes.length > 0)
+                ? remoto.fichaAtiva
+                : (fichaEmbutida || remoto.fichaAtiva);
+
+              const statusFinal =
+                fichaFinal && fichaFinal.divisoes && fichaFinal.divisoes.length > 0 && remoto.status === 'aguardando_ficha'
+                  ? 'ativo'
+                  : remoto.status;
+
+              return {
+                ...remoto,
+                status: statusFinal,
+                fichaAtiva: fichaFinal
+              };
+            });
+
+            this.alunosEmMemoria = alunosAtualizados;
+
+            // PROTEÇÃO CRÍTICA DE SESSÃO:
+            // Checar se a sessão AINDA está ativa no momento da conclusão do fetch.
+            // Se o usuário clicou em 'Sair' enquanto a requisição viajava pela rede,
+            // JAMAIS reescrever a sessão nem emitir eventos globais de sincronização.
+            const sessaoAposRede = this.obterSessao();
+            if (sessaoAposRede) {
+              if (sessaoAposRede.papel === 'aluno') {
+                const alunoAtualizado = alunosAtualizados.find(
+                  (a) => a.id === sessaoAposRede.id || a.email.toLowerCase() === sessaoAposRede.email.toLowerCase()
+                );
+                if (alunoAtualizado) {
+                  this.definirSessao(alunoAtualizado);
+                }
+              }
+              window.dispatchEvent(new CustomEvent('shara:atualizar_alunos', { detail: { alunos: alunosAtualizados } }));
+            }
+
+            return alunosAtualizados;
+          }
+        }
+      } catch (erro) {
+        console.warn('Falha na comunicação direta com a VPS:', erro);
+      } finally {
+        this.promessaSincronizacaoEmAndamento = null;
+      }
+
+      return this.alunosEmMemoria;
+    })();
+
+    return this.promessaSincronizacaoEmAndamento;
   }
 
   // Obter alunos carregados na memória de execução
