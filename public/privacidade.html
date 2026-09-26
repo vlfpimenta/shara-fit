@@ -11,30 +11,56 @@
       color: #f1f5f9;
       line-height: 1.6;
       margin: 0;
-      padding: 2rem 1rem;
+      padding: 1.5rem 1rem;
     }
     .container {
-      max-width: 800px;
+      max-width: 720px;
       margin: 0 auto;
-      background: #151a30;
-      padding: 2.5rem;
-      border-radius: 16px;
-      border: 1px solid #283056;
+      background: #141930;
+      padding: 1.5rem;
+      border-radius: 14px;
+      border: 1px solid #28325c;
     }
-    h1, h2 {
-      color: #ff3366;
+    .botao-voltar {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #ff2e7e;
+      color: #ffffff;
+      border: none;
+      padding: 0.55rem 1.1rem;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      text-decoration: none;
+      margin-bottom: 1.25rem;
+    }
+    .botao-voltar:hover {
+      background: #ff0055;
+    }
+    h1 {
+      color: #ffffff;
+      font-size: 1.35rem;
+      margin-top: 0;
+    }
+    h2 {
+      color: #ff2e7e;
+      font-size: 1rem;
+      margin-top: 1.25rem;
     }
     p, li {
       color: #94a3b8;
-    }
-    a {
-      color: #38bdf8;
-      text-decoration: none;
+      font-size: 0.88rem;
     }
   </style>
 </head>
 <body>
   <div class="container">
+    <button type="button" class="botao-voltar" onclick="if(window.history.length > 1) { window.history.back(); } else { window.location.href='/'; }">
+      ← Voltar ao Aplicativo
+    </button>
+
     <h1>Política de Privacidade e Proteção de Dados (LGPD)</h1>
     <p><strong>Aplicação:</strong> Shara-EF</p>
     <p><strong>Responsável:</strong> Sara (Professora de Educação Física)</p>
@@ -50,6 +76,12 @@
 
     <h2>4. Contato</h2>
     <p>Para dúvidas sobre o tratamento de seus dados, contate diretamente a professora responsável através dos canais oficiais do aplicativo Shara-EF.</p>
+
+    <div style="margin-top: 2rem; border-top: 1px solid #28325c; padding-top: 1rem;">
+      <button type="button" class="botao-voltar" onclick="if(window.history.length > 1) { window.history.back(); } else { window.location.href='/'; }">
+        ← Voltar ao Aplicativo
+      </button>
+    </div>
   </div>
 </body>
 </html>

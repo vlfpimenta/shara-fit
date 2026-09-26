@@ -33,26 +33,31 @@ shara-fit/
 │   └── README_VPS.md                # Guia de deploy na VPS
 ├── public/
 │   ├── icone.svg                    # Logotipo SVG de exercícios para Shara.ef
+│   ├── logo-vlfp.png                # Logo oficial da VLFP Info (50px de altura no rodapé)
 │   ├── manifest.webmanifest         # Manifesto PWA instalável
 │   └── privacidade.html             # Política de privacidade LGPD
 ├── src/
 │   ├── componentes/
-│   │   ├── cabecalho/Cabecalho.tsx  # Barra superior Shara.ef com SVG e login
+│   │   ├── cabecalho/Cabecalho.tsx  # Barra superior Shara.ef com SVG de halter e atalhos
 │   │   ├── cronometro/CronometroDescanso.tsx # Cronômetro estilo mFit com Web Audio API
-│   │   └── icones/index.tsx         # Conjunto de ícones inline SVG em PT-BR
+│   │   ├── icones/index.tsx         # Conjunto de ícones inline SVG em PT-BR
+│   │   ├── modal_privacidade/ModalPrivacidade.tsx # Modal de privacidade LGPD com botão fechar claro
+│   │   └── pwa/BotaoInstalarApp.tsx # Botão inteligente de instalação PWA
 │   ├── dados/
 │   │   └── iniciais.ts              # Biblioteca de exercícios e alunos de demonstração
 │   ├── servicos/
 │   │   └── armazenamento.ts         # Sincronização com a API na VPS + fallback offline
 │   ├── telas/
 │   │   ├── apresentacao/TelaApresentacao.tsx # Hero de boas-vindas com CTAs
-│   │   ├── login/ModalLogin.tsx     # Modal de login (Aluno e Professora)
-│   │   ├── novo_aluno/TelaNovoAluno.tsx # Wizard da Anamnese (13 questões + senha)
+│   │   ├── login/
+│   │   │   ├── ModalLogin.tsx       # Modal de login exclusivo do Aluno
+│   │   │   └── ModalLoginProfessor.tsx # Modal de login exclusivo da Professora Sara (via Logo VLFP Info)
+│   │   ├── novo_aluno/TelaNovoAluno.tsx # Wizard da Anamnese (13 questões + senha + popstate)
 │   │   ├── painel_aluno/PainelAluno.tsx # Interface do treino (mFit style)
 │   │   └── painel_professor/PainelProfessor.tsx # Gestão, construtor, Modo Aluno e Config VPS
 │   ├── tipos/
 │   │   └── index.ts                 # Tipos e modelos de dados em PT-BR
-│   ├── App.tsx                      # Componente raiz e controle de navegação
+│   ├── App.tsx                      # Componente raiz, controle de popstate e navegação de histórico
 │   ├── index.css                    # Design system escuro moderno e responsivo
 │   └── main.tsx                     # Ponto de entrada React
 ├── dist/                            # Build de produção verificado
@@ -66,7 +71,7 @@ shara-fit/
 ## 3. Conformidade LGPD & Licenças
 - Licença MIT permissiva sem dependências restritivas.
 - Código, nomes de arquivos e variáveis estritamente em Português Brasileiro (PT-BR).
-- Política de Privacidade em `/privacidade.html` (LGPD).
+- Política de Privacidade em `/privacidade.html` e no componente interno `ModalPrivacidade.tsx` (LGPD).
 
 ## 4. Status de Implementação
 - [x] Repositório criado e enviado para o GitHub: `https://github.com/vlfpimenta/shara-fit`
@@ -86,6 +91,10 @@ shara-fit/
 - [x] Otimização da interface mobile no painel da professora: substituição da tabela espremida por cartões individuais (`.card-aluno-mobile`), redução e proporcionalidade dos badges (`.badge`) e introdução da classe `.tag-objetivo` com texto formatado naturalmente sem caixa alta forçada.
 - [x] Sincronização remota automática com a VPS: implementação do endpoint `GET /api/alunos` no Fastify com normalização de campos da anamnese, integração de `sincronizarAlunosRemoto()` no frontend ao inicializar o painel, botão "🔄 Sincronizar" no cabeçalho e persistência de token JWT.
 - [x] Ajuste completo de escala dos elementos visuais no mobile inspirado no padrão MiniBOM: normalização da meta tag `viewport` sem restrições (`width=device-width, initial-scale=1.0`), definição de escala tipográfica base compacta (`html { font-size: 14px }` no mobile), redução proporcional de alturas de botões (36px/38px), cabeçalho compacto (50px), cards com padding reduzido (0.85rem), inputs e modais alinhados à ergonomia de smartphones.
+- [x] Rodapé da página inicial atualizado com logo oficial da VLFP Info (`public/logo-vlfp.png`) com altura de 50px e crédito "Desenvolvido por VLFP Info".
+- [x] Remoção do botão de cadeado do cabeçalho e da aba "Área da Professora" no modal de login de aluno. Criação do modal dedicado `ModalLoginProfessor.tsx`, acessado diretamente ao clicar no logo da VLFP Info no rodapé.
+- [x] Correção do link de privacidade na anamnese com o novo componente `ModalPrivacidade.tsx`, contendo botão de fechar acessível e visual integrado para evitar travamento em PWA standalone.
+- [x] Implementação de suporte nativo ao botão "Voltar" (Hardware Android / Navegador) via History API (`pushState` e `popstate`), permitindo retroceder entre etapas da anamnese, fechar modais e sair do modo simulado sem fechar o aplicativo.
 
 ## 5. Diretriz Obrigatória de Versionamento e Deploy Contínuo (CI/CD)
 

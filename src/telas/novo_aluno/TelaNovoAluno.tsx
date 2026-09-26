@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { IconeAvancar, IconeCheck, IconeVoltar } from '../../componentes/icones';
+import { ModalPrivacidade } from '../../componentes/modal_privacidade/ModalPrivacidade';
 import { BotaoInstalarApp } from '../../componentes/pwa/BotaoInstalarApp';
 import { ServicoArmazenamento } from '../../servicos/armazenamento';
 import { RespostasAnamnese, UsuarioAluno } from '../../tipos';
@@ -12,6 +13,7 @@ interface PropriedadesTelaNovoAluno {
 export const TelaNovoAluno: React.FC<PropriedadesTelaNovoAluno> = ({ aoConcluirCadastro, aoCancelar }) => {
   const [etapaAtual, setEtapaAtual] = useState<number>(1);
   const totalEtapas = 4;
+  const [modalPrivacidadeAberto, setModalPrivacidadeAberto] = useState<boolean>(false);
 
   // Estado das 13 perguntas da Anamnese do Forms
   const [formulario, setFormulario] = useState<RespostasAnamnese>({
@@ -76,6 +78,45 @@ export const TelaNovoAluno: React.FC<PropriedadesTelaNovoAluno> = ({ aoConcluirC
     setFormulario({ ...formulario, [campo]: listaAtual });
   };
 
+  // Sincronização de etapas e modal de privacidade com o histórico do navegador (botão voltar)
+  useEffect(() => {
+    const tratarPopState = (evento: PopStateEvent) => {
+      // 1. Se o modal de privacidade estiver aberto, fecha e preserva a etapa
+      if (modalPrivacidadeAberto) {
+        setModalPrivacidadeAberto(false);
+        return;
+      }
+
+      // 2. Se houver etapa registrada no histórico da anamnese
+      const estado = evento.state;
+      if (estado && estado.tela === 'novo_aluno' && typeof estado.etapa === 'number') {
+        setEtapaAtual(estado.etapa);
+        setErroValidacao('');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        // Se voltou para antes da anamnese
+        aoCancelar();
+      }
+    };
+
+    window.addEventListener('popstate', tratarPopState);
+    return () => {
+      window.removeEventListener('popstate', tratarPopState);
+    };
+  }, [modalPrivacidadeAberto, aoCancelar]);
+
+  const abrirPrivacidade = () => {
+    window.history.pushState({ tela: 'novo_aluno', etapa: etapaAtual, modalPrivacidade: true }, '');
+    setModalPrivacidadeAberto(true);
+  };
+
+  const fecharPrivacidade = () => {
+    setModalPrivacidadeAberto(false);
+    if (window.history.state?.modalPrivacidade) {
+      window.history.back();
+    }
+  };
+
   // Validação por etapa
   const avancarEtapa = () => {
     setErroValidacao('');
@@ -101,15 +142,16 @@ export const TelaNovoAluno: React.FC<PropriedadesTelaNovoAluno> = ({ aoConcluirC
         return setErroValidacao('Selecione pelo menos um dia disponível para treinar.');
       }
     }
-    setEtapaAtual(etapaAtual + 1);
+    const proximaEtapa = etapaAtual + 1;
+    window.history.pushState({ tela: 'novo_aluno', etapa: proximaEtapa }, '');
+    setEtapaAtual(proximaEtapa);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const voltarEtapa = () => {
     setErroValidacao('');
     if (etapaAtual > 1) {
-      setEtapaAtual(etapaAtual - 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.history.back();
     } else {
       aoCancelar();
     }
@@ -638,11 +680,25 @@ export const TelaNovoAluno: React.FC<PropriedadesTelaNovoAluno> = ({ aoConcluirC
                   />
                 </div>
 
-                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                <div style={{ fontSize: '0.75rem', color: '#94a3b8', lineHeight: 1.4 }}>
                   Ao clicar em concluir, você concorda com a nossa{' '}
-                  <a href="/privacidade.html" target="_blank" rel="noreferrer" style={{ color: '#38bdf8' }}>
-                    Política de Privacidade (LGPD)
-                  </a>{' '}
+                  <button
+                    type="button"
+                    onClick={abrirPrivacidade}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      padding: 0,
+                      color: '#38bdf8',
+                      textDecoration: 'underline',
+                      cursor: 'pointer',
+                      fontSize: 'inherit',
+                      fontFamily: 'inherit',
+                      display: 'inline'
+                    }}
+                  >
+                    Declaração de Privacidade & LGPD
+                  </button>{' '}
                   para armazenamento exclusivo do seu histórico físico.
                 </div>
 
@@ -682,6 +738,11 @@ export const TelaNovoAluno: React.FC<PropriedadesTelaNovoAluno> = ({ aoConcluirC
           </div>
         )}
       </div>
+
+      {/* Modal de Privacidade com botão fechar claro */}
+      {modalPrivacidadeAberto && (
+        <ModalPrivacidade aoFechar={fecharPrivacidade} />
+      )}
     </div>
   );
 };

@@ -1,11 +1,10 @@
 import React from 'react';
-import { IconeChave, IconeHaltere, IconeOlho, IconeSair, IconeUsuario } from '../icones';
+import { IconeHaltere, IconeOlho, IconeSair, IconeUsuario } from '../icones';
 import { UsuarioAluno, UsuarioSessao } from '../../tipos';
 
 interface PropriedadesCabecalho {
   usuario: UsuarioSessao | null;
   alunoSimulado: UsuarioAluno | null;
-  aoAbrirLoginProfessora: () => void;
   aoAbrirLoginAluno: () => void;
   aoEncerrarSessao: () => void;
   aoSairModoSimulacao: () => void;
@@ -15,7 +14,6 @@ interface PropriedadesCabecalho {
 export const Cabecalho: React.FC<PropriedadesCabecalho> = ({
   usuario,
   alunoSimulado,
-  aoAbrirLoginProfessora,
   aoAbrirLoginAluno,
   aoEncerrarSessao,
   aoSairModoSimulacao,
@@ -98,16 +96,6 @@ export const Cabecalho: React.FC<PropriedadesCabecalho> = ({
               >
                 <IconeUsuario tamanho={14} />
                 <span>Acesso Aluno</span>
-              </button>
-
-              {/* Botão de Login com ícone à direita para Sara logar no dashboard de controle */}
-              <button
-                className="botao-professora-login"
-                onClick={aoAbrirLoginProfessora}
-                title="Área restrita da Professora Sara"
-              >
-                <span>Professora</span>
-                <IconeChave tamanho={14} />
               </button>
             </div>
           )}
