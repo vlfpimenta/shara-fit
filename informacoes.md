@@ -47,7 +47,8 @@ shara-fit/
 │   ├── dados/
 │   │   └── iniciais.ts              # Biblioteca de exercícios e alunos de demonstração
 │   ├── servicos/
-│   │   └── armazenamento.ts         # Sincronização com a API na VPS + fallback offline
+│   │   ├── armazenamento.ts         # Sincronização com a API na VPS + fallback offline
+│   │   └── geradorPdfTreino.ts      # Geração de PDF e impressão nativa da ficha de treino (100% offline)
 │   ├── telas/
 │   │   ├── apresentacao/TelaApresentacao.tsx # Hero de boas-vindas com CTAs
 │   │   ├── login/
@@ -109,6 +110,8 @@ shara-fit/
 - [x] Substituição do texto/badge de status por um indicador luminoso colorido ao lado do nome do aluno (verde para treino ativo/liberado, amarelo para aguardando prescrição e vermelho para acesso desativado).
 - [x] Alocação dos 4 botões de ícone com tooltip ("Modo Aluno", "Editar", "Desativar/Reativar" e "Excluir") no local onde antes ficava o texto "Treino Ativo", com dimensões perfeitamente padronizadas (32x32px) tanto na tabela desktop quanto nos cards mobile.
 - [x] Correção de carregamento e sincronização com a VPS no Desktop: persistência automática dos dados reais da professora retornados pelo backend (`saramilk1234@gmail.com`), envio correto de headers de autorização sem fallback genérico incorreto, expurgo de mocks estáticos de teste caso a VPS possua alunos reais e disparo automático de sincronização remota na inicialização do aplicativo (`App.tsx`) e na montagem do painel (`PainelProfessor.tsx`).
+- [x] Opção para o aluno gerar e salvar PDF da ficha completa de treinos (`GeradorPdfTreino.ts`), formatado em layout profissional A4 com cabeçalho oficial, dados do aluno, métricas, divisões organizadas e orientações da professora Sara, 100% offline e sem dependências externas.
+- [x] Ocultação automática de badges de tempo de descanso nos exercícios (`.badge-tempo-descanso`) e do cronômetro flutuante no modo desktop (`@media (min-width: 769px)`), mantendo-os ativos exclusivamente no mobile.
 
 ## 5. Diretriz Obrigatória de Versionamento e Deploy Contínuo (CI/CD)
 

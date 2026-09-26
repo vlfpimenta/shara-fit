@@ -905,3 +905,24 @@ body::after {
     padding: 0.8rem 1.4rem;
   }
 }
+
+/* ==========================================================================
+   Ocultação de Badges e Cronômetro de Descanso no Desktop
+   (Ninguém leva o laptop para o treino; ativo apenas no mobile)
+   ========================================================================== */
+.badge-tempo-descanso {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+@media (min-width: 769px) {
+  .badge-tempo-descanso {
+    display: none !important;
+  }
+  .cronometro-flutuante,
+  button.cronometro-flutuante {
+    display: none !important;
+  }
+}
+

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { CronometroDescanso } from '../../componentes/cronometro/CronometroDescanso';
-import { IconeCheck, IconeCronometro, IconeHaltere, IconeInformacao } from '../../componentes/icones';
+import { IconeCheck, IconeCronometro, IconeHaltere, IconeInformacao, IconePdf } from '../../componentes/icones';
 import { ServicoArmazenamento } from '../../servicos/armazenamento';
+import { GeradorPdfTreino } from '../../servicos/geradorPdfTreino';
 import { UsuarioAluno } from '../../tipos';
 
 interface PropriedadesPainelAluno {
@@ -99,46 +100,72 @@ export const PainelAluno: React.FC<PropriedadesPainelAluno> = ({ aluno, aoAtuali
           </p>
         </div>
 
-        {/* Alternador de visualização Treino / Anamnese */}
-        <div style={{ display: 'flex', background: '#141930', borderRadius: '10px', padding: '3px', border: '1px solid #28325c' }}>
-          <button
-            onClick={() => setAbaInterna('treino')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.35rem',
-              padding: '0.4rem 0.75rem',
-              borderRadius: '7px',
-              border: 'none',
-              background: abaInterna === 'treino' ? 'var(--gradiente-primario)' : 'transparent',
-              color: '#ffffff',
-              fontWeight: 600,
-              fontSize: '0.78rem',
-              cursor: 'pointer'
-            }}
-          >
-            <IconeHaltere tamanho={14} />
-            <span>Ficha de Treino</span>
-          </button>
-          <button
-            onClick={() => setAbaInterna('anamnese')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.35rem',
-              padding: '0.4rem 0.75rem',
-              borderRadius: '7px',
-              border: 'none',
-              background: abaInterna === 'anamnese' ? 'rgba(56, 189, 248, 0.2)' : 'transparent',
-              color: abaInterna === 'anamnese' ? '#38bdf8' : '#94a3b8',
-              fontWeight: 600,
-              fontSize: '0.78rem',
-              cursor: 'pointer'
-            }}
-          >
-            <IconeInformacao tamanho={14} />
-            <span>Minha Anamnese</span>
-          </button>
+        {/* Ações e Alternador de visualização Treino / Anamnese */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {ficha && ficha.divisoes && ficha.divisoes.length > 0 && (
+            <button
+              className="botao-secundario"
+              onClick={() => GeradorPdfTreino.gerarPdfFicha(aluno)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                padding: '0.38rem 0.75rem',
+                fontSize: '0.78rem',
+                borderRadius: '8px',
+                borderColor: 'rgba(255, 46, 126, 0.4)',
+                background: 'rgba(255, 46, 126, 0.12)',
+                color: '#ffffff',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+              title="Gerar e Imprimir / Salvar em PDF a ficha completa de treinos"
+            >
+              <IconePdf tamanho={15} cor="#ff2e7e" />
+              <span>Gerar PDF</span>
+            </button>
+          )}
+
+          <div style={{ display: 'flex', background: '#141930', borderRadius: '10px', padding: '3px', border: '1px solid #28325c' }}>
+            <button
+              onClick={() => setAbaInterna('treino')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                padding: '0.4rem 0.75rem',
+                borderRadius: '7px',
+                border: 'none',
+                background: abaInterna === 'treino' ? 'var(--gradiente-primario)' : 'transparent',
+                color: '#ffffff',
+                fontWeight: 600,
+                fontSize: '0.78rem',
+                cursor: 'pointer'
+              }}
+            >
+              <IconeHaltere tamanho={14} />
+              <span>Ficha de Treino</span>
+            </button>
+            <button
+              onClick={() => setAbaInterna('anamnese')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                padding: '0.4rem 0.75rem',
+                borderRadius: '7px',
+                border: 'none',
+                background: abaInterna === 'anamnese' ? 'rgba(56, 189, 248, 0.2)' : 'transparent',
+                color: abaInterna === 'anamnese' ? '#38bdf8' : '#94a3b8',
+                fontWeight: 600,
+                fontSize: '0.78rem',
+                cursor: 'pointer'
+              }}
+            >
+              <IconeInformacao tamanho={14} />
+              <span>Minha Anamnese</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -255,7 +282,7 @@ export const PainelAluno: React.FC<PropriedadesPainelAluno> = ({ aluno, aoAtuali
                       </div>
 
                       <div style={{ textAlign: 'right' }}>
-                        <span className="badge badge-primaria" style={{ fontSize: '0.68rem' }}>
+                        <span className="badge badge-primaria badge-tempo-descanso" style={{ fontSize: '0.68rem' }}>
                           <IconeCronometro tamanho={12} /> {ex.intervaloSegundos}s descanso
                         </span>
                       </div>
