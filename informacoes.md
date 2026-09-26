@@ -105,6 +105,9 @@ shara-fit/
 - [x] Criação de menu dropdown suspenso acionado ao clicar no nome de usuário no topo do cabeçalho, agrupando "Sincronizar Alunos", "Configurar VPS / Domínio" e "Sair da Conta".
 - [x] Modularização do `ModalConfigVps.tsx` em componente reutilizável conectado ao cabeçalho.
 - [x] Construtor de treinos atualizado: suporte à exclusão de divisões/treinos adicionados com confirmação prévia e renomeação do botão final para apenas "Salvar".
+- [x] Remoção do botão redundante "Sair" do cabeçalho da professora, centralizando o logout e as configurações exclusivamente no menu dropdown suspenso.
+- [x] Substituição do texto/badge de status por um indicador luminoso colorido ao lado do nome do aluno (verde para treino ativo/liberado, amarelo para aguardando prescrição e vermelho para acesso desativado).
+- [x] Alocação dos 4 botões de ícone com tooltip ("Modo Aluno", "Editar", "Desativar/Reativar" e "Excluir") no local onde antes ficava o texto "Treino Ativo", com dimensões perfeitamente padronizadas (32x32px) tanto na tabela desktop quanto nos cards mobile.
 
 ## 5. Diretriz Obrigatória de Versionamento e Deploy Contínuo (CI/CD)
 

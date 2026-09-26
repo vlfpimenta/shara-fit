@@ -226,10 +226,12 @@ export const Cabecalho: React.FC<PropriedadesCabecalho> = ({
                 </div>
               )}
 
-              <button className="botao-sair" onClick={aoEncerrarSessao} title="Sair da Conta">
-                <IconeSair tamanho={14} />
-                <span>Sair</span>
-              </button>
+              {usuario.papel !== 'professor' && (
+                <button className="botao-sair" onClick={aoEncerrarSessao} title="Sair da Conta">
+                  <IconeSair tamanho={14} />
+                  <span>Sair</span>
+                </button>
+              )}
             </div>
           ) : (
             <div style={{ display: 'flex', gap: '0.4rem' }}>
