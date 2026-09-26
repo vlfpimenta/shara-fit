@@ -108,6 +108,7 @@ shara-fit/
 - [x] Remoção do botão redundante "Sair" do cabeçalho da professora, centralizando o logout e as configurações exclusivamente no menu dropdown suspenso.
 - [x] Substituição do texto/badge de status por um indicador luminoso colorido ao lado do nome do aluno (verde para treino ativo/liberado, amarelo para aguardando prescrição e vermelho para acesso desativado).
 - [x] Alocação dos 4 botões de ícone com tooltip ("Modo Aluno", "Editar", "Desativar/Reativar" e "Excluir") no local onde antes ficava o texto "Treino Ativo", com dimensões perfeitamente padronizadas (32x32px) tanto na tabela desktop quanto nos cards mobile.
+- [x] Correção de carregamento e sincronização com a VPS no Desktop: persistência automática dos dados reais da professora retornados pelo backend (`saramilk1234@gmail.com`), envio correto de headers de autorização sem fallback genérico incorreto, expurgo de mocks estáticos de teste caso a VPS possua alunos reais e disparo automático de sincronização remota na inicialização do aplicativo (`App.tsx`) e na montagem do painel (`PainelProfessor.tsx`).
 
 ## 5. Diretriz Obrigatória de Versionamento e Deploy Contínuo (CI/CD)
 

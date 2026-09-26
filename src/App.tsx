@@ -23,7 +23,7 @@ export const App: React.FC = () => {
   const [toquesLogo, setToquesLogo] = useState<number>(0);
   const temporizadorToquesRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Inicializar estado a partir do armazenamento local
+  // Inicializar estado a partir do armazenamento local e sincronizar com a VPS
   useEffect(() => {
     ServicoArmazenamento.inicializar();
     const sessaoSalva = ServicoArmazenamento.obterSessao();
@@ -41,6 +41,17 @@ export const App: React.FC = () => {
     if (!window.history.state) {
       window.history.replaceState({ tela: sessaoSalva ? 'painel' : 'apresentacao' }, '');
     }
+
+    // Sincronizar dados com a VPS em segundo plano logo na abertura
+    (async () => {
+      try {
+        await ServicoArmazenamento.verificarStatusProfessora();
+        await ServicoArmazenamento.sincronizarAlunosRemoto();
+        window.dispatchEvent(new CustomEvent('shara:atualizar_alunos'));
+      } catch (e) {
+        console.warn('Sincronização em background falhou:', e);
+      }
+    })();
   }, []);
 
   // Interceptador global do botão "Voltar" (Hardware Android / Navegador)
@@ -176,6 +187,7 @@ export const App: React.FC = () => {
     setAlunoSimulado(null);
     setTelaAtual('painel');
     window.history.replaceState({ tela: 'painel' }, '');
+    window.dispatchEvent(new CustomEvent('shara:atualizar_alunos'));
   };
 
   const tratarConclusaoNovoAluno = (novoAluno: UsuarioAluno) => {

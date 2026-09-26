@@ -25,13 +25,23 @@ export const PainelProfessor: React.FC<PropriedadesPainelProfessor> = ({ aoAtiva
   const [alunoSelecionadoAnamnese, setAlunoSelecionadoAnamnese] = useState<UsuarioAluno | null>(null);
   const [alunoParaPrescrever, setAlunoParaPrescrever] = useState<UsuarioAluno | null>(null);
 
-  // Atualização reativa de alunos quando disparado externamente (ex: pelo menu do cabeçalho)
+  // Atualização reativa e sincronização automática com a VPS ao carregar o painel
   useEffect(() => {
+    let montado = true;
+    ServicoArmazenamento.sincronizarAlunosRemoto().then((lista) => {
+      if (montado && lista && lista.length > 0) {
+        setAlunos(lista);
+      }
+    });
+
     const recarregar = () => {
       setAlunos(ServicoArmazenamento.obterAlunos());
     };
     window.addEventListener('shara:atualizar_alunos', recarregar);
-    return () => window.removeEventListener('shara:atualizar_alunos', recarregar);
+    return () => {
+      montado = false;
+      window.removeEventListener('shara:atualizar_alunos', recarregar);
+    };
   }, []);
 
   // Estados de Gestão de Aluno (Editar, Desativar e Excluir)

@@ -116,6 +116,16 @@ export class ServicoArmazenamento {
 
       if (resposta.ok) {
         const dados = await resposta.json();
+        if (dados.configurado && dados.email) {
+          const profConfigurada: UsuarioProfessor = {
+            id: 'prof-sara-1',
+            papel: 'professor',
+            nome: dados.nome || 'Sara',
+            email: dados.email.trim().toLowerCase(),
+            cref: '012345-G/SP'
+          };
+          localStorage.setItem(CHAVE_PROFESSORA, JSON.stringify(profConfigurada));
+        }
         return {
           configurado: Boolean(dados.configurado),
           nome: dados.nome,
@@ -205,7 +215,16 @@ export class ServicoArmazenamento {
     try {
       const urlApi = this.obterUrlApi();
       const token = this.obterToken();
-      const profAtual = this.obterDadosProfessora();
+      let profAtual = this.obterDadosProfessora();
+
+      // Se a professora local ainda tiver o e-mail mock genérico, consulta a VPS para obter o e-mail real
+      if (!profAtual?.email || profAtual.email === 'sara@sharaef.com.br') {
+        const status = await this.verificarStatusProfessora();
+        if (status.email) {
+          profAtual = this.obterDadosProfessora();
+        }
+      }
+
       const headers: Record<string, string> = {
         'Accept': 'application/json'
       };
@@ -217,7 +236,7 @@ export class ServicoArmazenamento {
       }
 
       const controle = new AbortController();
-      const tempoLimite = setTimeout(() => controle.abort(), 6000);
+      const tempoLimite = setTimeout(() => controle.abort(), 7000);
       const resposta = await fetch(`${urlApi}/api/alunos`, {
         headers,
         signal: controle.signal
@@ -241,8 +260,13 @@ export class ServicoArmazenamento {
             };
           });
 
-          // Preservar alunos locais não cadastrados no backend ainda
+          // Preservar alunos locais criados offline (excluindo os mocks padrão se a VPS já tiver dados reais)
+          const idsMocksPadrao = new Set(['aluno-demo-1', 'aluno-demo-2', 'aluno-demo-3']);
           for (const local of alunosLocais) {
+            // Se já existem alunos reais na VPS, não reinserir os mocks padrão de teste
+            if (alunosRemotos.length > 0 && idsMocksPadrao.has(local.id)) {
+              continue;
+            }
             const jaExiste = alunosSincronizados.some(
               (s) => s.id === local.id || s.email.toLowerCase() === local.email.toLowerCase()
             );
@@ -443,37 +467,51 @@ export class ServicoArmazenamento {
           this.salvarToken(dados.token);
         }
         if (dados.usuario) {
-          const usuarioServidor: UsuarioSessao = dados.usuario.papel === 'professor' 
-            ? PROFESSORA_PADRAO 
-            : (this.obterAlunoPorEmail(emailLimpo) || {
-                id: dados.usuario.id,
-                papel: 'aluno',
+          if (dados.usuario.papel === 'professor') {
+            const profAtualizada: UsuarioProfessor = {
+              id: dados.usuario.id || 'prof-sara-1',
+              papel: 'professor',
+              nome: dados.usuario.nome || 'Sara',
+              email: dados.usuario.email.trim().toLowerCase(),
+              cref: dados.usuario.cref || '012345-G/SP'
+            };
+            localStorage.setItem(CHAVE_PROFESSORA, JSON.stringify(profAtualizada));
+            this.definirSessao(profAtualizada);
+            this.desativarModoSimulacao();
+            await this.sincronizarAlunosRemoto();
+            return { sucesso: true, mensagem: dados.mensagem, usuario: profAtualizada };
+          } else {
+            // Login de Aluno: sincroniza com a VPS para obter anamnese e ficha completas
+            await this.sincronizarAlunosRemoto();
+            const alunoCompleto = this.obterAlunoPorEmail(emailLimpo) || {
+              id: dados.usuario.id,
+              papel: 'aluno',
+              nome: dados.usuario.nome,
+              email: dados.usuario.email,
+              dataCadastro: dados.usuario.data_cadastro || new Date().toISOString().split('T')[0],
+              status: dados.usuario.status || 'aguardando_ficha',
+              anamnese: dados.usuario.anamnese || {
                 nome: dados.usuario.nome,
-                email: dados.usuario.email,
-                dataCadastro: dados.usuario.data_cadastro || new Date().toISOString().split('T')[0],
-                status: dados.usuario.status || 'aguardando_ficha',
-                anamnese: dados.usuario.anamnese || {
-                  nome: dados.usuario.nome,
-                  idade: '30',
-                  contato: '',
-                  peso: '70',
-                  altura: '170',
-                  relacaoAtividade: '',
-                  possuiRestricaoMedica: 'Não',
-                  possuiLesaoDorCronica: 'Não',
-                  possuiDoenca: [],
-                  disponibilidadeTreino: [],
-                  historicoTreino: '',
-                  nivelConhecimentoTreino: 5,
-                  objetivoPrincipal: 'Condicionamento',
-                  localTreino: 'Academia',
-                  dataPreenchimento: new Date().toISOString().split('T')[0]
-                }
-              });
-
-          this.definirSessao(usuarioServidor);
-          this.desativarModoSimulacao();
-          return { sucesso: true, mensagem: dados.mensagem, usuario: usuarioServidor };
+                idade: '30',
+                contato: '',
+                peso: '70',
+                altura: '170',
+                relacaoAtividade: '',
+                possuiRestricaoMedica: 'Não',
+                possuiLesaoDorCronica: 'Não',
+                possuiDoenca: [],
+                disponibilidadeTreino: [],
+                historicoTreino: '',
+                nivelConhecimentoTreino: 5,
+                objetivoPrincipal: 'Condicionamento',
+                localTreino: 'Academia',
+                dataPreenchimento: new Date().toISOString().split('T')[0]
+              }
+            };
+            this.definirSessao(alunoCompleto);
+            this.desativarModoSimulacao();
+            return { sucesso: true, mensagem: dados.mensagem, usuario: alunoCompleto };
+          }
         }
       }
     } catch {
